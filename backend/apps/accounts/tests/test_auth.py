@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase, APIRequestFactory
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.views import MeAPIView
 from core.permissions import IsSeller
@@ -33,7 +33,8 @@ class AuthenticationTests(APITestCase):
         self.assertEqual(response.data["data"]["user"]["email"], "seller@example.com")
         self.assertEqual(response.data["data"]["user"]["role"], "SELLER")
         self.assertIn("access", response.data["data"]["tokens"])
-        self.assertIn("refresh", response.data["data"]["tokens"])
+        self.assertNotIn("refresh", response.data["data"]["tokens"])
+        self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, response.cookies)
         self.assertTrue(User.objects.filter(email="seller@example.com").exists())
 
     def test_register_returns_validation_error_message(self) -> None:
@@ -68,11 +69,13 @@ class AuthenticationTests(APITestCase):
             format="json",
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if response.status_code != status.HTTP_200_OK:
+            self.fail(repr(response.data))
         self.assertEqual(response.data["status"], "success")
         self.assertEqual(response.data["data"]["user"]["role"], "BUYER")
         self.assertIn("access", response.data["data"]["tokens"])
-        self.assertIn("refresh", response.data["data"]["tokens"])
+        self.assertNotIn("refresh", response.data["data"]["tokens"])
+        self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, response.cookies)
 
     def test_refresh_returns_new_access_token(self) -> None:
         user = User.objects.create_user(
@@ -88,17 +91,64 @@ class AuthenticationTests(APITestCase):
             },
             format="json",
         )
-        refresh_token = login_response.data["data"]["tokens"]["refresh"]
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME] = login_response.cookies[
+            settings.REFRESH_TOKEN_COOKIE_NAME
+        ].value
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME][
+            "path"
+        ] = settings.REFRESH_TOKEN_COOKIE_PATH
 
         response = self.client.post(
             reverse("refresh"),
-            {"refresh": refresh_token},
             format="json",
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if response.status_code != status.HTTP_200_OK:
+            self.fail(repr(response.data))
         self.assertEqual(response.data["status"], "success")
-        self.assertIn("access", response.data["data"])
+        self.assertIn("access", response.data["data"]["tokens"])
+        self.assertIn("user", response.data["data"])
+        self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, response.cookies)
+
+    def test_failed_refresh_does_not_clear_cookie_after_rotation_race(self) -> None:
+        user = User.objects.create_user(
+            email="race@example.com",
+            password="StrongPass123!",
+            role="BUYER",
+        )
+        login_response = self.client.post(
+            reverse("login"),
+            {
+                "email": user.email,
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+        original_refresh_cookie = login_response.cookies[
+            settings.REFRESH_TOKEN_COOKIE_NAME
+        ].value
+
+        first_refresh_response = self.client.post(
+            reverse("refresh"),
+            format="json",
+        )
+
+        self.assertEqual(first_refresh_response.status_code, status.HTTP_200_OK)
+        self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, first_refresh_response.cookies)
+
+        stale_client = APIClient()
+        stale_client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME] = original_refresh_cookie
+        stale_client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME][
+            "path"
+        ] = settings.REFRESH_TOKEN_COOKIE_PATH
+
+        stale_refresh_response = stale_client.post(
+            reverse("refresh"),
+            format="json",
+        )
+
+        self.assertEqual(stale_refresh_response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertNotIn(settings.REFRESH_TOKEN_COOKIE_NAME, stale_refresh_response.cookies)
 
     def test_me_returns_authenticated_user(self) -> None:
         user = User.objects.create_user(
@@ -120,21 +170,39 @@ class AuthenticationTests(APITestCase):
             password="StrongPass123!",
             role="BUYER",
         )
-        refresh = RefreshToken.for_user(user)
-        self.client.force_authenticate(user=user)
+        login_response = self.client.post(
+            reverse("login"),
+            {
+                "email": user.email,
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+        refresh_cookie_value = login_response.cookies[
+            settings.REFRESH_TOKEN_COOKIE_NAME
+        ].value
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME] = refresh_cookie_value
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME][
+            "path"
+        ] = settings.REFRESH_TOKEN_COOKIE_PATH
 
         logout_response = self.client.post(
             reverse("logout"),
-            {"refresh": str(refresh)},
             format="json",
         )
 
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertEqual(logout_response.data["status"], "success")
+        self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, logout_response.cookies)
+        self.assertEqual(logout_response.cookies[settings.REFRESH_TOKEN_COOKIE_NAME]["max-age"], 0)
+
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME] = refresh_cookie_value
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME][
+            "path"
+        ] = settings.REFRESH_TOKEN_COOKIE_PATH
 
         refresh_response = self.client.post(
             reverse("refresh"),
-            {"refresh": str(refresh)},
             format="json",
         )
 

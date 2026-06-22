@@ -4,16 +4,13 @@ import { useAuthStore } from "../stores/authStore";
 
 export default function HomePage() {
   const user = useAuthStore((state) => state.user);
-  const refreshToken = useAuthStore((state) => state.refreshToken);
   const clearSession = useAuthStore((state) => state.clearSession);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      if (refreshToken) {
-        await logoutRequest(refreshToken);
-      }
+      await logoutRequest();
     } finally {
       clearSession();
       setIsLoggingOut(false);
@@ -31,8 +28,8 @@ export default function HomePage() {
             Welcome{user ? `, ${user.email}` : ""}.
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
-            Your JWT session lives in memory only. Refreshing the page will clear
-            the in-memory auth state unless we later add a refresh-cookie session.
+            Your access token lives in memory, while the refresh token stays in
+            an HttpOnly cookie. A page refresh can restore your session securely.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">

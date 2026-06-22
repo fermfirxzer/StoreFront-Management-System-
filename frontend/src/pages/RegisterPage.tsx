@@ -41,7 +41,6 @@ export default function RegisterPage() {
       const session = await registerRequest(values);
       setSession({
         accessToken: session.tokens.access,
-        refreshToken: session.tokens.refresh,
         user: session.user,
       });
       navigate("/");

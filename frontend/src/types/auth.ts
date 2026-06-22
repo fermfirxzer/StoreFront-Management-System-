@@ -8,7 +8,6 @@ export interface AuthUser {
 
 export interface AuthTokens {
   access: string;
-  refresh: string;
 }
 
 export interface AuthSession {
@@ -25,4 +24,3 @@ export interface RegisterPayload extends AuthCredentials {
   passwordConfirmation: string;
   role: UserRole;
 }
-

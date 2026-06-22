@@ -62,9 +62,8 @@ class LoginSerializer(serializers.Serializer):
 
 
 class RefreshTokenSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
+    refresh = serializers.CharField(required=False, allow_blank=False)
 
 
 class LogoutSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-
+    refresh = serializers.CharField(required=False, allow_blank=False)

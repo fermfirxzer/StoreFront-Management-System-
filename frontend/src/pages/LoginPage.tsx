@@ -33,7 +33,6 @@ export default function LoginPage() {
       const session = await loginRequest(values);
       setSession({
         accessToken: session.tokens.access,
-        refreshToken: session.tokens.refresh,
         user: session.user,
       });
       navigate("/");

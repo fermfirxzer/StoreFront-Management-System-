@@ -5,9 +5,9 @@ export const baseURL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:80
 export function createBaseClient() {
   return axios.create({
     baseURL,
+    withCredentials: true,
     headers: {
       "Content-Type": "application/json",
     },
   });
 }
-

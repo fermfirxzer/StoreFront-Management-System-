@@ -7,17 +7,19 @@ import type {
 } from "../types/auth";
 import type { ApiSuccessResponse } from "../types/api";
 
+const authClient = createBaseClient();
+let refreshRequestPromise: Promise<RefreshEnvelope> | null = null;
+
 interface AuthEnvelope {
   user: AuthUser;
   tokens: {
     access: string;
-    refresh: string;
   };
 }
 
 interface RefreshEnvelope {
   access: string;
-  refresh?: string;
+  user: AuthUser;
 }
 
 export async function registerRequest(
@@ -45,20 +47,26 @@ export async function loginRequest(
   return response.data.data;
 }
 
-export async function refreshRequest(refreshToken: string): Promise<RefreshEnvelope> {
-  const response = await authClient.post<ApiSuccessResponse<RefreshEnvelope>>(
-    "/auth/refresh/",
-    { refresh: refreshToken }
-  );
-  return response.data.data;
+export async function refreshRequest(): Promise<RefreshEnvelope> {
+  if (refreshRequestPromise) {
+    return refreshRequestPromise;
+  }
+
+  refreshRequestPromise = authClient
+    .post<ApiSuccessResponse<RefreshEnvelope>>("/auth/refresh/")
+    .then((response) => response.data.data)
+    .finally(() => {
+      refreshRequestPromise = null;
+    });
+
+  return refreshRequestPromise;
 }
 
-export async function logoutRequest(refreshToken: string): Promise<void> {
-  await authClient.post("/auth/logout/", { refresh: refreshToken });
+export async function logoutRequest(): Promise<void> {
+  await authClient.post("/auth/logout/");
 }
 
 export async function fetchMe(): Promise<AuthUser> {
   const response = await authClient.get<ApiSuccessResponse<AuthUser>>("/auth/me/");
   return response.data.data;
 }
-const authClient = createBaseClient();

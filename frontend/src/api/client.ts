@@ -30,23 +30,16 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const { refreshToken, clearSession, updateTokens } = useAuthStore.getState();
-    if (!refreshToken) {
-      clearSession();
-      return Promise.reject(error);
-    }
-
+    const { clearSession, updateTokens, setUser } = useAuthStore.getState();
     originalRequest._retry = true;
 
     try {
-      const nextTokens = await refreshRequest(refreshToken);
-      updateTokens({
-        accessToken: nextTokens.access,
-        refreshToken: nextTokens.refresh,
-      });
+      const nextSession = await refreshRequest();
+      updateTokens({ accessToken: nextSession.access });
+      setUser(nextSession.user);
 
       if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${nextTokens.access}`;
+        originalRequest.headers.Authorization = `Bearer ${nextSession.access}`;
       }
 
       return apiClient(originalRequest);
