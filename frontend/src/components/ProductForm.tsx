@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { productSchema, type ProductFormValues } from "../features/products/schema";
+import AppleButton from "./apple/AppleButton";
+import AppleCard from "./apple/AppleCard";
+import AppleInput from "./apple/AppleInput";
 
 interface ProductFormProps {
   defaultValues?: Partial<ProductFormValues>;
@@ -25,12 +28,16 @@ export default function ProductForm({
   isLoading,
   submitLabel = "Save product",
 }: ProductFormProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl);
+  const [isDragging, setIsDragging] = useState(false);
+  const [createdObjectUrl, setCreatedObjectUrl] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -51,104 +58,252 @@ export default function ProductForm({
     setPreviewUrl(existingImageUrl);
   }, [existingImageUrl]);
 
+  useEffect(() => {
+    return () => {
+      if (createdObjectUrl) {
+        URL.revokeObjectURL(createdObjectUrl);
+      }
+    };
+  }, [createdObjectUrl]);
+
+  const imagePreview = useMemo(() => previewUrl, [previewUrl]);
+  const imageName = watch("image")?.name;
+
+  const syncPreviewFromFile = (file?: File) => {
+    if (createdObjectUrl) {
+      URL.revokeObjectURL(createdObjectUrl);
+      setCreatedObjectUrl(null);
+    }
+
+    if (!file) {
+      setPreviewUrl(existingImageUrl);
+      return;
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(file);
+    setCreatedObjectUrl(nextPreviewUrl);
+    setPreviewUrl(nextPreviewUrl);
+  };
+
+  const clearImage = () => {
+    setValue("image", undefined, { shouldValidate: true, shouldDirty: true });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    if (createdObjectUrl) {
+      URL.revokeObjectURL(createdObjectUrl);
+      setCreatedObjectUrl(null);
+    }
+    setPreviewUrl(null);
+  };
+
+  const handleFileChange = (file?: File) => {
+    setValue("image", file, { shouldValidate: true, shouldDirty: true });
+    syncPreviewFromFile(file);
+  };
+
   return (
-    <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid gap-6 md:grid-cols-2">
-        <label className="block md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-slate-700">Title</span>
-          <input
+    <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
+        <AppleCard className="space-y-6">
+          <div>
+            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
+              Product details
+            </p>
+            <h2 className="mt-2 text-[24px] font-semibold tracking-[-0.03em] text-apple-black">
+              Build a polished listing
+            </h2>
+          </div>
+
+          <AppleInput
             {...register("title")}
-            className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-sky-500"
+            error={errors.title?.message}
+            label="Product title"
             placeholder="Minimal desk lamp"
           />
-          {errors.title ? <p className="mt-2 text-sm text-rose-600">{errors.title.message}</p> : null}
-        </label>
 
-        <label className="block md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-slate-700">Description</span>
-          <textarea
+          <AppleInput
             {...register("description")}
-            rows={5}
-            className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-sky-500"
+            as="textarea"
+            error={errors.description?.message}
+            label="Description"
             placeholder="Describe the product, materials, and who it is for."
+            rows={4}
           />
-          {errors.description ? (
-            <p className="mt-2 text-sm text-rose-600">{errors.description.message}</p>
-          ) : null}
-        </label>
 
-        <label className="block">
-          <span className="mb-2 block text-sm font-medium text-slate-700">Unit price</span>
-          <div className="flex items-center rounded-2xl bg-slate-50 shadow-sm ring-1 ring-inset ring-slate-200 focus-within:ring-2 focus-within:ring-sky-500">
-            <span className="pl-4 text-sm font-semibold text-sky-700">THB</span>
-            <input
+          <div className="grid gap-6 sm:grid-cols-2">
+            <AppleInput
               {...register("unitPrice", { valueAsNumber: true })}
-              type="number"
-              step="0.01"
-              className="w-full rounded-2xl border-0 bg-transparent px-3 py-3 text-slate-900 focus:ring-0"
+              error={errors.unitPrice?.message}
+              label="Price"
+              prefix="THB"
+              inputMode="decimal"
               placeholder="149.99"
+              step="0.01"
+              type="number"
+            />
+
+            <AppleInput
+              {...register("quantity", { valueAsNumber: true })}
+              error={errors.quantity?.message}
+              label="Quantity"
+              inputMode="numeric"
+              placeholder="12"
+              step="1"
+              type="number"
             />
           </div>
-          <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">
-            Currency shown in Thai baht
-          </p>
-          {errors.unitPrice ? (
-            <p className="mt-2 text-sm text-rose-600">{errors.unitPrice.message}</p>
-          ) : null}
-        </label>
 
-        <label className="block">
-          <span className="mb-2 block text-sm font-medium text-slate-700">Quantity</span>
-          <input
-            {...register("quantity", { valueAsNumber: true })}
-            type="number"
-            step="1"
-            className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-sky-500"
-            placeholder="12"
-          />
-          {errors.quantity ? (
-            <p className="mt-2 text-sm text-rose-600">{errors.quantity.message}</p>
-          ) : null}
-        </label>
+          <div className="flex flex-col gap-3 rounded-apple-card bg-apple-gray-light p-4">
+            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-black">
+              Quick note
+            </p>
+            <p className="text-[17px] leading-7 text-apple-gray">
+              Keep product copy concise and specific. Clear titles and a simple
+              first image do most of the work.
+            </p>
+          </div>
+        </AppleCard>
 
-        <label className="block md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-slate-700">Product image</span>
+        <AppleCard className="space-y-5">
+          <div>
+            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
+              Product image
+            </p>
+            <h2 className="mt-2 text-[24px] font-semibold tracking-[-0.03em] text-apple-black">
+              Preview and upload
+            </h2>
+          </div>
+
+          <div
+            className={[
+              "group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-apple-card border border-dashed bg-apple-gray-light p-5 text-center transition-all duration-200 ease-apple",
+              isDragging ? "border-apple-blue bg-white shadow-apple-focus" : "border-apple-border hover:bg-white",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={() => {
+              fileInputRef.current?.click();
+            }}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => {
+              setIsDragging(false);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsDragging(false);
+              const file = event.dataTransfer.files?.[0];
+              handleFileChange(file);
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+          >
+            {imagePreview ? (
+              <>
+                <img
+                  alt="Product preview"
+                  className="h-full w-full rounded-apple-card object-cover"
+                  src={imagePreview}
+                />
+                <div className="absolute inset-0 flex items-end justify-between gap-3 rounded-apple-card bg-gradient-to-t from-black/40 via-black/5 to-transparent p-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <span className="rounded-apple-pill bg-white/95 px-3 py-2 text-[12px] font-medium text-apple-black shadow-sm">
+                    {imageName ?? "Current image"}
+                  </span>
+                  <button
+                    className="rounded-apple-pill border border-white/40 bg-white/95 px-4 py-2 text-[12px] font-medium text-apple-red shadow-sm transition active:scale-[0.98]"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clearImage();
+                    }}
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex max-w-sm flex-col items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+                  <svg
+                    aria-hidden="true"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    className="h-8 w-8 text-apple-blue"
+                  >
+                    <path
+                      d="M12 16V8m0 0-3 3m3-3 3 3M5 16.5A3.5 3.5 0 0 1 6.2 9.7 5 5 0 0 1 16 8.3 3.5 3.5 0 1 1 17.5 16.5H5Z"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.8"
+                    />
+                  </svg>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[17px] font-medium text-apple-black">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-[13px] leading-6 text-apple-gray">
+                    PNG, JPG, WEBP up to the limits supported by the backend.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <input
-            type="file"
+            ref={fileInputRef}
             accept="image/*"
-            className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 file:mr-4 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-500"
+            className="hidden"
+            type="file"
             onChange={(event) => {
               const file = event.target.files?.[0];
-              setValue("image", file, { shouldValidate: true });
-              if (!file) {
-                setPreviewUrl(existingImageUrl);
-                return;
-              }
-              const nextPreviewUrl = URL.createObjectURL(file);
-              setPreviewUrl(nextPreviewUrl);
+              handleFileChange(file);
             }}
           />
-          {errors.image ? <p className="mt-2 text-sm text-rose-600">{errors.image.message}</p> : null}
-        </label>
+
+          <div className="rounded-apple-card bg-apple-gray-light p-4">
+            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-black">
+              Accepted types
+            </p>
+            <p className="mt-2 text-[12px] leading-6 text-apple-gray">
+              Common image formats are supported. A square or 16:9 image works
+              especially well in the dashboard grid.
+            </p>
+          </div>
+
+          {errors.image ? (
+            <p className="text-[12px] text-apple-red animate-shake">{errors.image.message}</p>
+          ) : null}
+        </AppleCard>
       </div>
 
-      {previewUrl ? (
-        <div className="overflow-hidden rounded-[1.75rem] bg-slate-100 p-3 shadow-inner">
-          <img
-            alt="Product preview"
-            className="h-64 w-full rounded-[1.25rem] object-cover"
-            src={previewUrl}
-          />
-        </div>
-      ) : null}
-
-      <button
-        className="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f172a_0%,#0369a1_60%,#22c55e_100%)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isLoading}
-        type="submit"
-      >
-        {isLoading ? "Saving..." : submitLabel}
-      </button>
+      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+        <AppleButton
+          variant="ghost"
+          to="/seller"
+          className="w-full sm:w-auto"
+        >
+          Cancel
+        </AppleButton>
+        <AppleButton
+          className="w-full sm:w-auto"
+          loading={isLoading}
+          type="submit"
+          variant="primary"
+        >
+          {submitLabel}
+        </AppleButton>
+      </div>
     </form>
   );
 }

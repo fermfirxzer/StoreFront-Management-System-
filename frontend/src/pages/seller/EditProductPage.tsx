@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import ProductForm from "../../components/ProductForm";
 import type { ProductFormValues } from "../../features/products/schema";
 import { getSellerProductById, updateProduct } from "../../api/productApi";
 import { getApiErrorMessage } from "../../utils/apiErrors";
+import AppleButton from "../../components/apple/AppleButton";
+import AppleCard from "../../components/apple/AppleCard";
 
 export default function EditProductPage() {
   const { productId } = useParams<{ productId: string }>();
@@ -36,48 +38,77 @@ export default function EditProductPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fee2e2_0%,#f8fafc_40%,#ffffff_100%)] text-slate-900">
-      <section className="mx-auto max-w-4xl px-6 py-16">
-        <Link className="text-sm font-medium text-sky-600 hover:text-sky-500" to="/seller">
-          Back to dashboard
-        </Link>
-        <div className="mt-6 rounded-[2rem] bg-white p-8 shadow-[0_20px_70px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80 sm:p-10">
-          <p className="text-sm font-medium uppercase tracking-[0.28em] text-rose-600">
+    <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
+      <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
+        <AppleButton to="/seller" variant="ghost">
+          ← Products
+        </AppleButton>
+
+        <div className="mt-8 space-y-3">
+          <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
             Edit product
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">
-            Update an existing seller listing.
+          <h1 className="text-[32px] font-semibold tracking-[-0.04em] sm:text-[40px]">
+            Edit Product
           </h1>
-
-          {isLoading ? <p className="mt-6 text-slate-600">Loading product details...</p> : null}
-          {error ? (
-            <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {getApiErrorMessage(error, "We could not load that product.")}
-            </div>
-          ) : null}
-          {errorMessage ? (
-            <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {errorMessage}
-            </div>
-          ) : null}
-
-          {product ? (
-            <div className="mt-8">
-              <ProductForm
-                defaultValues={{
-                  title: product.title,
-                  description: product.description,
-                  unitPrice: product.unitPrice,
-                  quantity: product.quantity,
-                }}
-                existingImageUrl={product.image}
-                isLoading={updateMutation.isPending}
-                onSubmit={handleSubmit}
-                submitLabel="Update product"
-              />
-            </div>
-          ) : null}
+          <p className="max-w-2xl text-[17px] leading-7 text-apple-gray">
+            Refine the title, pricing, quantity, or image without changing the
+            underlying listing flow.
+          </p>
         </div>
+
+        {isLoading ? (
+          <AppleCard className="mt-8 space-y-4">
+            <div className="space-y-3">
+              <div className="h-4 w-28 rounded-full apple-skeleton animate-shimmer" />
+              <div className="h-8 w-48 rounded-full apple-skeleton animate-shimmer" />
+              <div className="h-5 w-72 rounded-full apple-skeleton animate-shimmer" />
+            </div>
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
+              <div className="space-y-4 rounded-apple-card bg-apple-gray-light p-6">
+                <div className="h-4 w-32 rounded-full apple-skeleton animate-shimmer" />
+                <div className="h-12 rounded-apple-input apple-skeleton animate-shimmer" />
+                <div className="h-4 w-28 rounded-full apple-skeleton animate-shimmer" />
+                <div className="h-32 rounded-apple-input apple-skeleton animate-shimmer" />
+              </div>
+              <div className="space-y-4 rounded-apple-card bg-apple-gray-light p-6">
+                <div className="h-4 w-28 rounded-full apple-skeleton animate-shimmer" />
+                <div className="h-64 rounded-apple-card apple-skeleton animate-shimmer" />
+              </div>
+            </div>
+          </AppleCard>
+        ) : null}
+
+        {error ? (
+          <AppleCard className="mt-8 border border-apple-red/20 bg-[#fff5f5] text-apple-red">
+            <p className="text-[13px] leading-6 animate-shake">
+              {getApiErrorMessage(error, "We could not load that product.")}
+            </p>
+          </AppleCard>
+        ) : null}
+
+        {errorMessage ? (
+          <AppleCard className="mt-4 border border-apple-red/20 bg-[#fff5f5] text-apple-red">
+            <p className="text-[13px] leading-6 animate-shake">{errorMessage}</p>
+          </AppleCard>
+        ) : null}
+
+        {product ? (
+          <div className="mt-8">
+            <ProductForm
+              defaultValues={{
+                title: product.title,
+                description: product.description,
+                unitPrice: product.unitPrice,
+                quantity: product.quantity,
+              }}
+              existingImageUrl={product.image}
+              isLoading={updateMutation.isPending}
+              onSubmit={handleSubmit}
+              submitLabel="Save Product"
+            />
+          </div>
+        ) : null}
       </section>
     </main>
   );

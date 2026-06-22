@@ -6,6 +6,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { loginRequest } from "../api/auth";
 import { useAuthStore } from "../stores/authStore";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import AppleButton from "../components/apple/AppleButton";
+import AppleCard from "../components/apple/AppleCard";
+import AppleInput from "../components/apple/AppleInput";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address."),
@@ -42,82 +45,82 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] text-slate-900">
-      <section className="mx-auto flex min-h-screen max-w-6xl items-center px-6 py-16">
-        <div className="grid w-full gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="flex flex-col justify-center">
-            <p className="text-sm font-medium uppercase tracking-[0.28em] text-blue-600">
+    <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
+      <section className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-10 sm:px-6">
+        <AppleCard className="w-full max-w-[480px] p-6 sm:p-8 lg:p-10 shadow-apple-modal">
+          <div className="text-center">
+            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
               Marketplace
             </p>
-            <h1 className="mt-4 max-w-xl text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
-              Sign in to manage your store or start shopping.
+            <h1 className="mt-4 text-[32px] font-semibold tracking-[-0.04em] sm:text-[40px]">
+              Sign in
             </h1>
-            <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
-              A minimal, secure login flow with in-memory JWT storage and
-              automatic refresh handling.
+            <p className="mt-3 text-[17px] leading-7 text-apple-gray">
+              Sign in to your account.
             </p>
           </div>
 
-          <div className="rounded-[2rem] bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80">
-            <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Use the email you registered with.
-            </p>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <AppleInput
+              {...register("email")}
+              error={errors.email?.message}
+              label="Email"
+              placeholder="you@example.com"
+              type="email"
+            />
 
-            <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">
-                  Email
-                </span>
-                <input
-                  {...register("email")}
-                  type="email"
-                  className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
-                  placeholder="you@example.com"
-                />
-                {errors.email ? (
-                  <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
-                ) : null}
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">
+            <div className="space-y-2">
+              <div className="flex items-end justify-between gap-4">
+                <span className="block text-[13px] font-medium uppercase tracking-[0.2px] text-apple-black">
                   Password
                 </span>
-                <input
-                  {...register("password")}
-                  type="password"
-                  className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
-                  placeholder="••••••••"
-                />
-                {errors.password ? (
-                  <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
-                ) : null}
-              </label>
+                <button
+                  className="text-[12px] font-medium text-apple-gray transition hover:text-apple-blue"
+                  type="button"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <AppleInput
+                {...register("password")}
+                error={errors.password?.message}
+                label="Password"
+                labelClassName="sr-only"
+                placeholder="........"
+                type="password"
+              />
+            </div>
 
-              {errorMessage ? (
-                <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {errorMessage}
-                </p>
-              ) : null}
+            {errorMessage ? (
+              <p className="rounded-apple-card border border-apple-red/20 bg-[#fff5f5] px-4 py-3 text-[13px] text-apple-red animate-shake">
+                {errorMessage}
+              </p>
+            ) : null}
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSubmitting ? "Signing in..." : "Sign in"}
-              </button>
-            </form>
+            <AppleButton fullWidth loading={isSubmitting} type="submit" variant="primary">
+              Sign In
+            </AppleButton>
 
-            <p className="mt-6 text-sm text-slate-600">
-              New here?{" "}
-              <Link className="font-medium text-blue-600 hover:text-blue-700" to="/register">
-                Create an account
-              </Link>
-            </p>
-          </div>
-        </div>
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-apple-border" />
+              <span className="text-[12px] uppercase tracking-[0.2px] text-apple-gray">
+                or
+              </span>
+              <div className="h-px flex-1 bg-apple-border" />
+            </div>
+
+            <AppleButton fullWidth to="/register" variant="secondary">
+              Create an account
+            </AppleButton>
+          </form>
+
+          <p className="mt-6 text-center text-[15px] leading-7 text-apple-gray">
+            New here?{" "}
+            <Link className="font-medium text-apple-blue transition hover:text-apple-blue-hover" to="/register">
+              Create an account
+            </Link>
+          </p>
+        </AppleCard>
       </section>
     </main>
   );
