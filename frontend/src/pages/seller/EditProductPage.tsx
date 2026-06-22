@@ -39,23 +39,38 @@ export default function EditProductPage() {
 
   return (
     <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
-      <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
-        <AppleButton to="/seller" variant="ghost">
-          ← Products
+      <section className="mx-auto max-w-6xl px-6 py-10">
+        <AppleButton to="/seller" variant="ghost" className="px-4 py-2 text-[13px]">
+          {"<"} Products
         </AppleButton>
 
-        <div className="mt-8 space-y-3">
-          <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
-            Edit product
-          </p>
-          <h1 className="text-[32px] font-semibold tracking-[-0.04em] sm:text-[40px]">
-            Edit Product
-          </h1>
-          <p className="max-w-2xl text-[17px] leading-7 text-apple-gray">
-            Refine the title, pricing, quantity, or image without changing the
-            underlying listing flow.
-          </p>
-        </div>
+        <AppleCard className="mt-8 space-y-4">
+          <div className="space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
+              Edit product
+            </p>
+            <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight sm:text-[40px]">
+              Edit Product
+            </h1>
+            <p className="max-w-2xl text-[15px] leading-7 text-apple-gray">
+              Refine the title, pricing, quantity, or image with clearer visual grouping.
+            </p>
+          </div>
+
+          {error ? (
+            <AppleCard className="border border-apple-red/20 bg-[#fff5f5] text-apple-red">
+              <p className="text-[13px] leading-6 animate-shake">
+                {getApiErrorMessage(error, "We could not load that product.")}
+              </p>
+            </AppleCard>
+          ) : null}
+
+          {errorMessage ? (
+            <AppleCard className="border border-apple-red/20 bg-[#fff5f5] text-apple-red">
+              <p className="text-[13px] leading-6 animate-shake">{errorMessage}</p>
+            </AppleCard>
+          ) : null}
+        </AppleCard>
 
         {isLoading ? (
           <AppleCard className="mt-8 space-y-4">
@@ -76,20 +91,6 @@ export default function EditProductPage() {
                 <div className="h-64 rounded-apple-card apple-skeleton animate-shimmer" />
               </div>
             </div>
-          </AppleCard>
-        ) : null}
-
-        {error ? (
-          <AppleCard className="mt-8 border border-apple-red/20 bg-[#fff5f5] text-apple-red">
-            <p className="text-[13px] leading-6 animate-shake">
-              {getApiErrorMessage(error, "We could not load that product.")}
-            </p>
-          </AppleCard>
-        ) : null}
-
-        {errorMessage ? (
-          <AppleCard className="mt-4 border border-apple-red/20 bg-[#fff5f5] text-apple-red">
-            <p className="text-[13px] leading-6 animate-shake">{errorMessage}</p>
           </AppleCard>
         ) : null}
 

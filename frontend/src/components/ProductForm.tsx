@@ -107,10 +107,10 @@ export default function ProductForm({
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
         <AppleCard className="space-y-6">
           <div>
-            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
               Product details
             </p>
-            <h2 className="mt-2 text-[24px] font-semibold tracking-[-0.03em] text-apple-black">
+            <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-apple-black">
               Build a polished listing
             </h2>
           </div>
@@ -154,11 +154,11 @@ export default function ProductForm({
             />
           </div>
 
-          <div className="flex flex-col gap-3 rounded-apple-card bg-apple-gray-light p-4">
-            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-black">
+          <div className="flex flex-col gap-3 rounded-apple-card bg-[#fbfbfc] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
               Quick note
             </p>
-            <p className="text-[17px] leading-7 text-apple-gray">
+            <p className="text-[15px] leading-7 text-apple-gray">
               Keep product copy concise and specific. Clear titles and a simple
               first image do most of the work.
             </p>
@@ -167,18 +167,20 @@ export default function ProductForm({
 
         <AppleCard className="space-y-5">
           <div>
-            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
               Product image
             </p>
-            <h2 className="mt-2 text-[24px] font-semibold tracking-[-0.03em] text-apple-black">
+            <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-apple-black">
               Preview and upload
             </h2>
           </div>
 
           <div
             className={[
-              "group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-apple-card border border-dashed bg-apple-gray-light p-5 text-center transition-all duration-200 ease-apple",
-              isDragging ? "border-apple-blue bg-white shadow-apple-focus" : "border-apple-border hover:bg-white",
+              "group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-apple-card border border-dashed bg-[#f5f5f7] p-5 text-center transition-all duration-200 ease-apple",
+              isDragging
+                ? "border-apple-blue bg-white shadow-[0_0_0_3px_rgba(0,113,227,0.15)]"
+                : "border-apple-border hover:bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)]",
             ]
               .filter(Boolean)
               .join(" ")}
@@ -214,7 +216,7 @@ export default function ProductForm({
                   className="h-full w-full rounded-apple-card object-cover"
                   src={imagePreview}
                 />
-                <div className="absolute inset-0 flex items-end justify-between gap-3 rounded-apple-card bg-gradient-to-t from-black/40 via-black/5 to-transparent p-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="absolute inset-0 flex items-end justify-between gap-3 rounded-apple-card bg-gradient-to-t from-black/45 via-black/5 to-transparent p-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   <span className="rounded-apple-pill bg-white/95 px-3 py-2 text-[12px] font-medium text-apple-black shadow-sm">
                     {imageName ?? "Current image"}
                   </span>
@@ -232,7 +234,7 @@ export default function ProductForm({
               </>
             ) : (
               <div className="flex max-w-sm flex-col items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
                   <svg
                     aria-hidden="true"
                     fill="none"
@@ -271,11 +273,11 @@ export default function ProductForm({
             }}
           />
 
-          <div className="rounded-apple-card bg-apple-gray-light p-4">
-            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-black">
+          <div className="rounded-apple-card bg-[#fbfbfc] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
               Accepted types
             </p>
-            <p className="mt-2 text-[12px] leading-6 text-apple-gray">
+            <p className="mt-2 text-[13px] leading-6 text-apple-gray">
               Common image formats are supported. A square or 16:9 image works
               especially well in the dashboard grid.
             </p>
@@ -291,12 +293,12 @@ export default function ProductForm({
         <AppleButton
           variant="ghost"
           to="/seller"
-          className="w-full sm:w-auto"
+          className="w-full px-5 py-2.5 text-[15px] sm:w-auto"
         >
           Cancel
         </AppleButton>
         <AppleButton
-          className="w-full sm:w-auto"
+          className="w-full px-5 py-2.5 text-[15px] sm:w-auto"
           loading={isLoading}
           type="submit"
           variant="primary"

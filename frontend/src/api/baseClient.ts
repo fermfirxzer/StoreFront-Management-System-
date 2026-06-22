@@ -6,8 +6,5 @@ export function createBaseClient() {
   return axios.create({
     baseURL,
     withCredentials: true,
-    headers: {
-      "Content-Type": "application/json",
-    },
   });
 }

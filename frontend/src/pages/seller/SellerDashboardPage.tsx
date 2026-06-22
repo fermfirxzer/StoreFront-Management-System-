@@ -56,37 +56,37 @@ export default function SellerDashboardPage() {
 
   return (
     <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
-      <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-3">
-            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
               Seller dashboard
             </p>
-            <h1 className="text-[32px] font-semibold tracking-[-0.04em] sm:text-[40px]">
+            <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight sm:text-[40px]">
               My Products
             </h1>
-            <p className="text-[17px] leading-7 text-apple-gray">
+            <p className="text-[15px] text-apple-gray mt-1">
               {sortedProducts.length} products
             </p>
           </div>
 
-          <AppleButton to="/seller/products/new" variant="primary">
+          <AppleButton to="/seller/products/new" variant="primary" className="px-5 py-2.5 text-[15px]">
             Add Product
           </AppleButton>
         </div>
 
         <AppleCard className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[17px] font-medium text-apple-black">Sort catalog</p>
-            <p className="mt-1 text-[13px] text-apple-gray">
+            <p className="text-[15px] font-semibold text-apple-black">Sort catalog</p>
+            <p className="mt-0.5 text-[12px] text-apple-gray">
               Review products by recency, price, or quantity.
             </p>
           </div>
 
-          <label className="flex items-center gap-3 text-[15px] font-medium text-apple-black">
+          <label className="flex items-center gap-3 text-[13px] font-medium text-apple-black">
             <span>Sort by</span>
             <select
-              className="rounded-apple-pill border border-apple-border bg-white px-4 py-3 text-[15px] text-apple-black outline-none transition-all duration-150 ease-apple focus:border-apple-blue focus:shadow-apple-focus"
+              className="cursor-pointer rounded-[12px] border-0 bg-apple-gray-light px-3 py-2 text-[13px] font-medium text-apple-black outline-none transition-all duration-150 ease-apple focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,113,227,0.15)]"
               onChange={(event) => {
                 setSortBy(event.target.value as SortOption);
               }}
@@ -102,7 +102,7 @@ export default function SellerDashboardPage() {
         </AppleCard>
 
         {isLoading ? (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 6 }).map((_, index) => (
               <AppleCard key={index} className="space-y-4" interactive>
                 <div className="aspect-[16/9] rounded-apple-input apple-skeleton animate-shimmer" />
@@ -135,13 +135,13 @@ export default function SellerDashboardPage() {
         ) : null}
 
         {!isLoading && !error && sortedProducts.length > 0 ? (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {sortedProducts.map((product) => {
               const isDeleting = deleteMutation.isPending && deletingId === product.id;
 
               return (
                 <AppleCard as="article" className="overflow-hidden p-0" interactive key={product.id}>
-                  <div className="aspect-[16/9] bg-apple-gray-light">
+                  <div className="aspect-[16/9] bg-[#f5f5f7]">
                     {product.image ? (
                       <img
                         alt={product.title}
@@ -149,13 +149,13 @@ export default function SellerDashboardPage() {
                         src={product.image}
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-[#f5f5f7]">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#ececf1] via-[#f5f5f7] to-[#e5e5ea]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/85 shadow-sm">
                           <svg
                             aria-hidden="true"
                             fill="none"
                             viewBox="0 0 24 24"
-                            className="h-8 w-8 text-apple-gray"
+                            className="h-5 w-5 text-apple-gray"
                           >
                             <path
                               d="M4 7.5h16v9H4zM8 7.5l2-3h4l2 3M4 16.5h16"
@@ -166,32 +166,41 @@ export default function SellerDashboardPage() {
                             />
                           </svg>
                         </div>
+                        <span className="text-[11px] font-medium tracking-[0.2px] text-apple-gray">
+                          No image
+                        </span>
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-4 p-6">
                     <div>
-                      <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-apple-black">
+                      <h2 className="text-[15px] font-semibold tracking-[-0.01em] leading-snug text-apple-black">
                         {product.title}
                       </h2>
-                      <p className="mt-2 text-[15px] leading-7 text-apple-gray">
+                      <p className="mt-1 text-[13px] leading-6 text-apple-gray line-clamp-2">
                         {product.description || "No description added yet."}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-[17px] font-medium text-apple-black">
+                      <span className="text-[17px] font-semibold text-apple-black">
                         {thaiCurrencyFormatter.format(product.unitPrice)}
                       </span>
                       <span
                         className={[
-                          "rounded-apple-pill px-3 py-1 text-[12px] font-medium",
+                          "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
                           product.quantity > 0
-                            ? "bg-[#eaf8ef] text-apple-green"
-                            : "bg-[#fff0ef] text-apple-red",
+                            ? "bg-[#d1fae5] text-[#065f46]"
+                            : "bg-[#fee2e2] text-[#991b1b]",
                         ].join(" ")}
                       >
+                        <span
+                          className={[
+                            "inline-block h-1.5 w-1.5 rounded-full",
+                            product.quantity > 0 ? "bg-apple-green" : "bg-apple-red",
+                          ].join(" ")}
+                        />
                         {product.quantity > 0 ? `${product.quantity} in stock` : "Out of stock"}
                       </span>
                     </div>
@@ -201,7 +210,12 @@ export default function SellerDashboardPage() {
                     </p>
 
                     <div className="flex gap-3">
-                      <AppleButton fullWidth to={`/seller/products/${product.id}/edit`} variant="secondary">
+                      <AppleButton
+                        fullWidth
+                        to={`/seller/products/${product.id}/edit`}
+                        variant="secondary"
+                        className="px-4 py-2 text-[13px]"
+                      >
                         Edit
                       </AppleButton>
                       <AppleButton
@@ -212,6 +226,7 @@ export default function SellerDashboardPage() {
                           void deleteMutation.mutateAsync(product.id);
                         }}
                         variant="destructive"
+                        className="px-4 py-2 text-[13px]"
                       >
                         Delete
                       </AppleButton>
@@ -225,7 +240,7 @@ export default function SellerDashboardPage() {
 
         {!isLoading && !error && sortedProducts.length === 0 ? (
           <AppleCard className="mt-8 grid place-items-center py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-apple-gray-light">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-apple-gray-light shadow-sm">
               <svg
                 aria-hidden="true"
                 fill="none"
@@ -248,7 +263,7 @@ export default function SellerDashboardPage() {
               Start by adding your first product.
             </p>
             <div className="mt-8">
-              <AppleButton to="/seller/products/new" variant="primary">
+              <AppleButton to="/seller/products/new" variant="primary" className="px-5 py-2.5 text-[15px]">
                 Add Product
               </AppleButton>
             </div>

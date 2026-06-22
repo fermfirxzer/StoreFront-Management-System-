@@ -39,7 +39,7 @@ function getVariantClasses(variant: Variant) {
 
 function baseClasses({ fullWidth, loading, variant }: { fullWidth?: boolean; loading?: boolean; variant: Variant }) {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-apple-pill px-6 py-3 text-[17px] font-medium tracking-[-0.01em] transition-all duration-200 ease-apple active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-apple-pill px-6 py-3 text-[17px] font-medium tracking-[-0.01em] shadow-sm transition-all duration-200 ease-apple active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60",
     getVariantClasses(variant),
     fullWidth ? "w-full" : "",
     loading ? "cursor-progress" : "",

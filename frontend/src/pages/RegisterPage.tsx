@@ -6,13 +6,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { registerRequest } from "../api/auth";
 import { useAuthStore } from "../stores/authStore";
 import { getApiErrorMessage } from "../utils/apiErrors";
-import AppleButton from "../components/apple/AppleButton";
-import AppleCard from "../components/apple/AppleCard";
-import AppleInput from "../components/apple/AppleInput";
 
 const registerSchema = z
   .object({
-    fullName: z.string().min(2, "Enter your full name."),
     email: z.string().email("Enter a valid email address."),
     password: z.string().min(8, "Password must be at least 8 characters."),
     passwordConfirmation: z.string().min(8, "Confirm your password."),
@@ -33,13 +29,11 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: "", role: "BUYER" },
+    defaultValues: { role: "BUYER" },
   });
-  const selectedRole = watch("role");
 
   const onSubmit = async (values: RegisterFormValues) => {
     setErrorMessage(null);
@@ -56,124 +50,114 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
-      <section className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-10 sm:px-6">
-        <AppleCard className="w-full max-w-[560px] p-6 sm:p-8 lg:p-10 shadow-apple-modal">
-          <div className="text-center">
-            <p className="text-[13px] font-medium uppercase tracking-[0.2px] text-apple-gray">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] text-slate-900">
+      <section className="mx-auto flex min-h-screen max-w-6xl items-center px-6 py-16">
+        <div className="grid w-full gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="flex flex-col justify-center">
+            <p className="text-sm font-medium uppercase tracking-[0.28em] text-blue-600">
               Marketplace
             </p>
-            <h1 className="mt-4 text-[32px] font-semibold tracking-[-0.04em] sm:text-[40px]">
-              Create your account
+            <h1 className="mt-4 max-w-xl text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
+              Create your account and choose your role.
             </h1>
-            <p className="mt-3 text-[17px] leading-7 text-apple-gray">
-              A clean onboarding flow with a quick role choice and room to grow.
+            <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
+              Sellers can manage products. Buyers can browse, cart, and checkout.
             </p>
           </div>
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-6 sm:grid-cols-2">
-              <AppleInput
-                {...register("fullName")}
-                error={errors.fullName?.message}
-                label="Full name"
-                placeholder="Alex Johnson"
-              />
-              <AppleInput
-                {...register("email")}
-                error={errors.email?.message}
-                label="Email"
-                placeholder="you@example.com"
-                type="email"
-              />
-            </div>
+          <div className="rounded-[2rem] bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80">
+            <h2 className="text-2xl font-semibold tracking-tight">Create account</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Everything stays in memory except the backend-issued tokens.
+            </p>
 
-            <div className="grid gap-6 sm:grid-cols-2">
-              <AppleInput
-                {...register("password")}
-                error={errors.password?.message}
-                label="Password"
-                placeholder="........"
-                type="password"
-              />
-              <AppleInput
-                {...register("passwordConfirmation")}
-                error={errors.passwordConfirmation?.message}
-                label="Confirm password"
-                placeholder="........"
-                type="password"
-              />
-            </div>
+            <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Email
+                </span>
+                <input
+                  {...register("email")}
+                  type="email"
+                  className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
+                  placeholder="you@example.com"
+                />
+                {errors.email ? (
+                  <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                ) : null}
+              </label>
 
-            <div>
-              <span className="mb-2 block text-[13px] font-medium uppercase tracking-[0.2px] text-apple-black">
-                Role
-              </span>
-              <div className="grid grid-cols-2 rounded-[10px] bg-apple-gray-light p-1">
-                <label className="cursor-pointer">
-                  <input
-                    {...register("role")}
-                    className="peer sr-only"
-                    type="radio"
-                    value="SELLER"
-                  />
-                  <span
-                    className={[
-                      "flex items-center justify-center rounded-[8px] px-4 py-3 text-[17px] font-medium transition-all duration-150 ease-apple",
-                      selectedRole === "SELLER"
-                        ? "bg-white text-apple-black shadow-sm"
-                        : "text-apple-gray",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    Seller
-                  </span>
-                </label>
-                <label className="cursor-pointer">
-                  <input
-                    {...register("role")}
-                    className="peer sr-only"
-                    type="radio"
-                    value="BUYER"
-                  />
-                  <span
-                    className={[
-                      "flex items-center justify-center rounded-[8px] px-4 py-3 text-[17px] font-medium transition-all duration-150 ease-apple",
-                      selectedRole === "BUYER"
-                        ? "bg-white text-apple-black shadow-sm"
-                        : "text-apple-gray",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    Buyer
-                  </span>
-                </label>
-              </div>
-              {errors.role ? (
-                <p className="mt-1 text-[12px] text-apple-red animate-shake">{errors.role.message}</p>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Password
+                </span>
+                <input
+                  {...register("password")}
+                  type="password"
+                  className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
+                  placeholder="••••••••"
+                />
+                {errors.password ? (
+                  <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
+                ) : null}
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Confirm password
+                </span>
+                <input
+                  {...register("passwordConfirmation")}
+                  type="password"
+                  className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
+                  placeholder="••••••••"
+                />
+                {errors.passwordConfirmation ? (
+                  <p className="mt-2 text-sm text-red-600">
+                    {errors.passwordConfirmation.message}
+                  </p>
+                ) : null}
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Account type
+                </span>
+                <select
+                  {...register("role")}
+                  className="w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="BUYER">Buyer</option>
+                  <option value="SELLER">Seller</option>
+                </select>
+                {errors.role ? (
+                  <p className="mt-2 text-sm text-red-600">{errors.role.message}</p>
+                ) : null}
+              </label>
+
+              {errorMessage ? (
+                <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {errorMessage}
+                </p>
               ) : null}
-            </div>
 
-            {errorMessage ? (
-              <p className="rounded-apple-card border border-apple-red/20 bg-[#fff5f5] px-4 py-3 text-[13px] text-apple-red animate-shake">
-                {errorMessage}
-              </p>
-            ) : null}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? "Creating account..." : "Create account"}
+              </button>
+            </form>
 
-            <AppleButton fullWidth loading={isSubmitting} type="submit" variant="primary">
-              Create Account
-            </AppleButton>
-          </form>
-
-          <p className="mt-6 text-center text-[15px] leading-7 text-apple-gray">
-            Already have an account?{" "}
-            <Link className="font-medium text-apple-blue transition hover:text-apple-blue-hover" to="/login">
-              Sign in
-            </Link>
-          </p>
-        </AppleCard>
+            <p className="mt-6 text-sm text-slate-600">
+              Already have an account?{" "}
+              <Link className="font-medium text-blue-600 hover:text-blue-700" to="/login">
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
       </section>
     </main>
   );
