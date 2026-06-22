@@ -3,12 +3,63 @@
 from __future__ import annotations
 
 import os
+from urllib.parse import urlparse
 from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
+
+def _load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE pairs from a local .env file if it exists."""
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].strip()
+        if "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("\"").strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def _load_database_url() -> None:
+    """Map DATABASE_URL to the DB_* variables this project uses."""
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        return
+
+    parsed = urlparse(database_url)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        return
+
+    if parsed.path and len(parsed.path) > 1:
+        os.environ.setdefault("DB_NAME", parsed.path.lstrip("/"))
+    if parsed.username:
+        os.environ.setdefault("DB_USER", parsed.username)
+    if parsed.password:
+        os.environ.setdefault("DB_PASSWORD", parsed.password)
+    if parsed.hostname:
+        os.environ.setdefault("DB_HOST", parsed.hostname)
+    if parsed.port:
+        os.environ.setdefault("DB_PORT", str(parsed.port))
+
+
+_load_env_file(BASE_DIR / ".env")
+_load_database_url()
+
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-please-change-this-secret-key-when-deploying",
+)
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [
@@ -26,6 +77,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "rest_framework_simplejwt.token_blacklist",
+    "apps.accounts",
+    "apps.products",
+    "apps.cart",
+    "apps.orders",
 ]
 
 MIDDLEWARE = [
@@ -89,6 +145,7 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
