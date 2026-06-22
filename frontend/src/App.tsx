@@ -7,7 +7,7 @@ export default function App() {
             Milestone 1
           </p>
           <h1 className="max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            Marketplace setup is ready for the next milestone.
+          StoreFront-Management-System setup is ready for the next milestone.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
             The Django backend, React frontend, shared API response pattern, and
