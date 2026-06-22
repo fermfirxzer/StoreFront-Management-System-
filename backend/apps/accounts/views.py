@@ -8,6 +8,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
+from core.responses import error_response
 from core.responses import success_response
 
 from .models import User
@@ -66,7 +67,10 @@ class RefreshAPIView(TokenRefreshView):
         serializer.is_valid(raise_exception=True)
         refresh_token = serializer.validated_data["refresh"]
         token_serializer = self.get_serializer(data={"refresh": refresh_token})
-        token_serializer.is_valid(raise_exception=True)
+        try:
+            token_serializer.is_valid(raise_exception=True)
+        except TokenError as exc:
+            return error_response(str(exc), status_code=status.HTTP_401_UNAUTHORIZED)
         return success_response(token_serializer.validated_data)
 
 

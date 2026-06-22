@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase, APIRequestFactory
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.views import MeAPIView
 from core.permissions import IsSeller
@@ -34,6 +35,22 @@ class AuthenticationTests(APITestCase):
         self.assertIn("access", response.data["data"]["tokens"])
         self.assertIn("refresh", response.data["data"]["tokens"])
         self.assertTrue(User.objects.filter(email="seller@example.com").exists())
+
+    def test_register_returns_validation_error_message(self) -> None:
+        response = self.client.post(
+            reverse("register"),
+            {
+                "email": "seller@example.com",
+                "password": "StrongPass123!",
+                "password_confirmation": "StrongPass123!",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["status"], "error")
+        self.assertEqual(response.data["message"], "This field is required.")
+        self.assertIn("role", response.data["errors"])
 
     def test_login_returns_tokens_for_existing_user(self) -> None:
         User.objects.create_user(
@@ -96,6 +113,32 @@ class AuthenticationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["data"]["email"], "me@example.com")
         self.assertEqual(response.data["data"]["role"], "SELLER")
+
+    def test_logout_blacklists_refresh_token(self) -> None:
+        user = User.objects.create_user(
+            email="logout@example.com",
+            password="StrongPass123!",
+            role="BUYER",
+        )
+        refresh = RefreshToken.for_user(user)
+        self.client.force_authenticate(user=user)
+
+        logout_response = self.client.post(
+            reverse("logout"),
+            {"refresh": str(refresh)},
+            format="json",
+        )
+
+        self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(logout_response.data["status"], "success")
+
+        refresh_response = self.client.post(
+            reverse("refresh"),
+            {"refresh": str(refresh)},
+            format="json",
+        )
+
+        self.assertEqual(refresh_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class PermissionTests(APITestCase):
