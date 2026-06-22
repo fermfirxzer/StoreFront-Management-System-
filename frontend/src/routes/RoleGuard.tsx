@@ -10,7 +10,7 @@ export default function RoleGuard({ allowedRole }: RoleGuardProps) {
   const role = useAuthStore((state) => state.role);
   const isBootstrapping = useAuthStore((state) => state.isBootstrapping);
   const isAuthenticated = useAuthStore(
-    (state) => state.accessToken !== null && state.user !== null
+    (state) => Boolean(state.accessToken) && state.user !== null
   );
 
   if (isBootstrapping) {

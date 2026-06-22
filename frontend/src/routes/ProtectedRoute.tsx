@@ -5,7 +5,7 @@ export default function ProtectedRoute() {
   const location = useLocation();
   const isBootstrapping = useAuthStore((state) => state.isBootstrapping);
   const isAuthenticated = useAuthStore(
-    (state) => state.accessToken !== null && state.user !== null
+    (state) => Boolean(state.accessToken) && state.user !== null
   );
 
   if (isBootstrapping) {

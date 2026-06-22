@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { logoutRequest } from "../api/auth";
 import { useAuthStore } from "../stores/authStore";
 
 export default function HomePage() {
   const user = useAuthStore((state) => state.user);
+  const role = useAuthStore((state) => state.role);
   const clearSession = useAuthStore((state) => state.clearSession);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -36,6 +38,14 @@ export default function HomePage() {
             <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
               Role: {user?.role ?? "Unknown"}
             </span>
+            {role === "SELLER" ? (
+              <Link
+                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500"
+                to="/seller"
+              >
+                Open seller dashboard
+              </Link>
+            ) : null}
             <button
               type="button"
               onClick={handleLogout}

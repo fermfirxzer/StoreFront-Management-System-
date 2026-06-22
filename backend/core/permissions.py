@@ -20,3 +20,11 @@ class IsBuyer(BasePermission):
         user = request.user
         return bool(user and user.is_authenticated and getattr(user, "role", None) == "BUYER")
 
+
+class IsProductOwner(BasePermission):
+    message = "You can only manage your own products."
+
+    def has_object_permission(self, request, view, obj) -> bool:
+        user = request.user
+        return bool(user and user.is_authenticated and getattr(obj, "seller_id", None) == user.id)
+

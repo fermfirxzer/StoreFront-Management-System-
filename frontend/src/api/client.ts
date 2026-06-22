@@ -35,11 +35,11 @@ apiClient.interceptors.response.use(
 
     try {
       const nextSession = await refreshRequest();
-      updateTokens({ accessToken: nextSession.access });
+      updateTokens({ accessToken: nextSession.tokens.access });
       setUser(nextSession.user);
 
       if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${nextSession.access}`;
+        originalRequest.headers.Authorization = `Bearer ${nextSession.tokens.access}`;
       }
 
       return apiClient(originalRequest);

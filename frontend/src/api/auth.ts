@@ -18,7 +18,9 @@ interface AuthEnvelope {
 }
 
 interface RefreshEnvelope {
-  access: string;
+  tokens: {
+    access: string;
+  };
   user: AuthUser;
 }
 
