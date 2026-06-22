@@ -11,6 +11,22 @@ from rest_framework.views import exception_handler
 from .responses import error_response
 
 
+def _first_message(detail: Any) -> str | None:
+    if isinstance(detail, str):
+        return detail
+    if isinstance(detail, list):
+        for item in detail:
+            message = _first_message(item)
+            if message:
+                return message
+    if isinstance(detail, Mapping):
+        for item in detail.values():
+            message = _first_message(item)
+            if message:
+                return message
+    return None
+
+
 def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Any:
     response = exception_handler(exc, context)
     if response is None:
@@ -21,7 +37,7 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Any:
     message = "Request failed."
     errors: Any = response.data
     if isinstance(exc, ValidationError):
-        message = "Validation failed."
+        message = _first_message(response.data) or "Validation failed."
     elif isinstance(response.data, Mapping) and "detail" in response.data:
         message = str(response.data["detail"])
 
