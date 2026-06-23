@@ -105,12 +105,12 @@ export default function ProductForm({
   return (
     <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
-        <AppleCard className="space-y-6">
+        <AppleCard className="space-y-6 border-t-4 border-t-brand-500">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
               Product details
             </p>
-            <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-apple-black">
+            <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-brand-900">
               Build a polished listing
             </h2>
           </div>
@@ -154,8 +154,8 @@ export default function ProductForm({
             />
           </div>
 
-          <div className="flex flex-col gap-3 rounded-apple-card bg-[#fbfbfc] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
+          <div className="flex flex-col gap-3 rounded-apple-card bg-brand-50 p-4 shadow-[0_1px_4px_rgba(99,102,241,0.08)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
               Quick note
             </p>
             <p className="text-[15px] leading-7 text-apple-gray">
@@ -165,22 +165,22 @@ export default function ProductForm({
           </div>
         </AppleCard>
 
-        <AppleCard className="space-y-5">
+        <AppleCard className="space-y-5 border-t-4 border-t-violet-500">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-violet-600">
               Product image
             </p>
-            <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-apple-black">
+            <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-brand-900">
               Preview and upload
             </h2>
           </div>
 
           <div
             className={[
-              "group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-apple-card border border-dashed bg-[#f5f5f7] p-5 text-center transition-all duration-200 ease-apple",
+              "group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-apple-card border border-dashed bg-surface-input p-5 text-center transition-all duration-200 ease-apple",
               isDragging
-                ? "border-apple-blue bg-white shadow-[0_0_0_3px_rgba(0,113,227,0.15)]"
-                : "border-apple-border hover:bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)]",
+                ? "border-brand-500 bg-white shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"
+                : "border-brand-200 hover:bg-white hover:shadow-[0_2px_12px_rgba(99,102,241,0.12)]",
             ]
               .filter(Boolean)
               .join(" ")}
@@ -221,7 +221,7 @@ export default function ProductForm({
                     {imageName ?? "Current image"}
                   </span>
                   <button
-                    className="rounded-apple-pill border border-white/40 bg-white/95 px-4 py-2 text-[12px] font-medium text-apple-red shadow-sm transition active:scale-[0.98]"
+                    className="rounded-full border-2 border-[#FF3B30] bg-white/95 px-4 py-2 text-[12px] font-semibold text-[#FF3B30] shadow-sm transition-all duration-150 hover:bg-[#FF3B30] hover:text-white active:scale-[0.98]"
                     onClick={(event) => {
                       event.stopPropagation();
                       clearImage();
@@ -234,12 +234,12 @@ export default function ProductForm({
               </>
             ) : (
               <div className="flex max-w-sm flex-col items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(99,102,241,0.12)]">
                   <svg
                     aria-hidden="true"
                     fill="none"
                     viewBox="0 0 24 24"
-                    className="h-8 w-8 text-apple-blue"
+                    className="h-8 w-8 text-brand-600"
                   >
                     <path
                       d="M12 16V8m0 0-3 3m3-3 3 3M5 16.5A3.5 3.5 0 0 1 6.2 9.7 5 5 0 0 1 16 8.3 3.5 3.5 0 1 1 17.5 16.5H5Z"
@@ -273,8 +273,8 @@ export default function ProductForm({
             }}
           />
 
-          <div className="rounded-apple-card bg-[#fbfbfc] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
+          <div className="rounded-apple-card bg-brand-50 p-4 shadow-[0_1px_4px_rgba(99,102,241,0.08)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
               Accepted types
             </p>
             <p className="mt-2 text-[13px] leading-6 text-apple-gray">
@@ -293,12 +293,12 @@ export default function ProductForm({
         <AppleButton
           variant="ghost"
           to="/seller"
-          className="w-full px-5 py-2.5 text-[15px] sm:w-auto"
+          className="w-full px-6 py-2.5 text-[15px] sm:w-auto"
         >
           Cancel
         </AppleButton>
         <AppleButton
-          className="w-full px-5 py-2.5 text-[15px] sm:w-auto"
+          className="w-full px-6 py-2.5 text-[15px] sm:w-auto"
           loading={isLoading}
           type="submit"
           variant="primary"

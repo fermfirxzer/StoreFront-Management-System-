@@ -18,8 +18,8 @@ export default function AppleCard({
   return (
     <Component
       className={[
-        "rounded-apple-card bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.08)] apple-card-border transition-all duration-[250ms] ease-apple",
-        interactive ? "hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(0,0,0,0.13)]" : "",
+        "rounded-apple-card bg-surface-card p-6 shadow-[0_2px_12px_rgba(99,102,241,0.08)] apple-card-border transition-all duration-[250ms] ease-apple",
+        interactive ? "hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(99,102,241,0.16)]" : "",
         className,
       ]
         .filter(Boolean)

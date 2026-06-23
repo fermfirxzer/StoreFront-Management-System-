@@ -38,7 +38,7 @@ const AppleInput = forwardRef(function AppleInput(
   ref: ForwardedRef<HTMLInputElement | HTMLTextAreaElement>
 ) {
   const fieldClasses = [
-    "w-full rounded-apple-input border border-transparent bg-apple-gray-light px-4 py-3 text-[17px] text-apple-black outline-none transition-all duration-150 ease-apple placeholder:text-apple-gray focus:border-apple-blue focus:bg-white focus:shadow-apple-focus",
+    "w-full rounded-apple-input border border-brand-200 bg-surface-input px-4 py-3 text-[17px] text-apple-black outline-none transition-all duration-150 ease-apple placeholder:text-[#A5B4FC] focus:border-brand-500 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]",
     prefix ? "pl-14" : "",
     error ? "border-apple-red focus:border-apple-red focus:shadow-[0_0_0_3px_rgba(255,59,48,0.12)]" : "",
     fieldClassName,

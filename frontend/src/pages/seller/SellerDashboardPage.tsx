@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteProduct, getSellerProducts } from "../../api/productApi";
 import { getApiErrorMessage } from "../../utils/apiErrors";
@@ -19,6 +19,10 @@ export default function SellerDashboardPage() {
   const clearSession = useAuthStore((state) => state.clearSession);
   const [sortBy, setSortBy] = useState<SortOption>("updated-desc");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteProduct, setPendingDeleteProduct] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   const { data: products, isLoading, error } = useQuery({
     queryKey: ["seller-products"],
@@ -30,6 +34,7 @@ export default function SellerDashboardPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["seller-products"] });
       setDeletingId(null);
+      setPendingDeleteProduct(null);
     },
     onError: () => {
       setDeletingId(null);
@@ -50,34 +55,62 @@ export default function SellerDashboardPage() {
       default:
         return (
           new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
-        );
+      );
     }
   });
 
+  useEffect(() => {
+    if (!pendingDeleteProduct) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        deleteMutation.reset();
+        setPendingDeleteProduct(null);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [deleteMutation, pendingDeleteProduct]);
+
   return (
-    <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
-      <section className="mx-auto max-w-7xl px-6 py-10">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
-              Seller dashboard
-            </p>
-            <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight sm:text-[40px]">
-              My Products
-            </h1>
-            <p className="text-[15px] text-apple-gray mt-1">
-              {sortedProducts.length} products
-            </p>
+    <>
+      <section className="animate-fade-in space-y-8">
+        <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="mt-1 h-10 w-1 rounded-full bg-gradient-to-b from-brand-500 to-violet-500" />
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
+                Seller dashboard
+              </p>
+              <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight text-brand-900 sm:text-[40px]">
+                My Products
+              </h1>
+              <p className="text-[15px] text-apple-gray">
+                {sortedProducts.length} products listed
+              </p>
+            </div>
           </div>
 
-          <AppleButton to="/seller/products/new" variant="primary" className="px-5 py-2.5 text-[15px]">
+          <AppleButton
+            to="/seller/products/create"
+            variant="primary"
+            className="px-5 py-2.5 text-[15px]"
+          >
             Add Product
           </AppleButton>
         </div>
 
-        <AppleCard className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <AppleCard className="mt-8 flex flex-col gap-4 border-l-4 border-brand-500 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[15px] font-semibold text-apple-black">Sort catalog</p>
+            <p className="text-[15px] font-semibold text-brand-900">Sort catalog</p>
             <p className="mt-0.5 text-[12px] text-apple-gray">
               Review products by recency, price, or quantity.
             </p>
@@ -86,7 +119,7 @@ export default function SellerDashboardPage() {
           <label className="flex items-center gap-3 text-[13px] font-medium text-apple-black">
             <span>Sort by</span>
             <select
-              className="cursor-pointer rounded-[12px] border-0 bg-apple-gray-light px-3 py-2 text-[13px] font-medium text-apple-black outline-none transition-all duration-150 ease-apple focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,113,227,0.15)]"
+              className="cursor-pointer rounded-[12px] border border-brand-200 bg-surface-input px-3 py-2 text-[13px] font-medium text-brand-700 outline-none transition-all duration-150 ease-apple focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"
               onChange={(event) => {
                 setSortBy(event.target.value as SortOption);
               }}
@@ -104,12 +137,15 @@ export default function SellerDashboardPage() {
         {isLoading ? (
           <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 6 }).map((_, index) => (
-              <AppleCard key={index} className="space-y-4" interactive>
-                <div className="aspect-[16/9] rounded-apple-input apple-skeleton animate-shimmer" />
-                <div className="space-y-3">
-                  <div className="h-5 w-3/4 rounded-full apple-skeleton animate-shimmer" />
-                  <div className="h-4 w-1/2 rounded-full apple-skeleton animate-shimmer" />
-                  <div className="h-4 w-24 rounded-full apple-skeleton animate-shimmer" />
+              <AppleCard key={index} className="space-y-4 overflow-hidden p-0" interactive>
+                <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
+                <div className="px-6 pb-6 pt-5 space-y-4">
+                  <div className="aspect-[16/9] rounded-apple-input apple-skeleton animate-shimmer" />
+                  <div className="space-y-3">
+                    <div className="h-5 w-3/4 rounded-full apple-skeleton animate-shimmer" />
+                    <div className="h-4 w-1/2 rounded-full apple-skeleton animate-shimmer" />
+                    <div className="h-4 w-24 rounded-full apple-skeleton animate-shimmer" />
+                  </div>
                 </div>
               </AppleCard>
             ))}
@@ -137,11 +173,15 @@ export default function SellerDashboardPage() {
         {!isLoading && !error && sortedProducts.length > 0 ? (
           <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {sortedProducts.map((product) => {
-              const isDeleting = deleteMutation.isPending && deletingId === product.id;
-
               return (
-                <AppleCard as="article" className="overflow-hidden p-0" interactive key={product.id}>
-                  <div className="aspect-[16/9] bg-[#f5f5f7]">
+                <AppleCard
+                  as="article"
+                  className="overflow-hidden border border-[#E0E7FF] p-0 shadow-[0_2px_12px_rgba(99,102,241,0.08)] hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(99,102,241,0.15)]"
+                  interactive
+                  key={product.id}
+                >
+                  <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
+                  <div className="aspect-video bg-[#EEF2FF]">
                     {product.image ? (
                       <img
                         alt={product.title}
@@ -149,13 +189,13 @@ export default function SellerDashboardPage() {
                         src={product.image}
                       />
                     ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#ececf1] via-[#f5f5f7] to-[#e5e5ea]">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/85 shadow-sm">
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-t-[18px] bg-[#EEF2FF]">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E0E7FF]">
                           <svg
                             aria-hidden="true"
                             fill="none"
                             viewBox="0 0 24 24"
-                            className="h-5 w-5 text-apple-gray"
+                            className="h-5 w-5 text-[#6366F1]"
                           >
                             <path
                               d="M4 7.5h16v9H4zM8 7.5l2-3h4l2 3M4 16.5h16"
@@ -166,16 +206,16 @@ export default function SellerDashboardPage() {
                             />
                           </svg>
                         </div>
-                        <span className="text-[11px] font-medium tracking-[0.2px] text-apple-gray">
+                        <span className="text-[11px] font-medium text-[#6366F1]">
                           No image
                         </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="space-y-4 p-6">
+                  <div className="space-y-4 px-4 pb-4 pt-4">
                     <div>
-                      <h2 className="text-[15px] font-semibold tracking-[-0.01em] leading-snug text-apple-black">
+                      <h2 className="text-[15px] font-semibold tracking-[-0.01em] leading-snug text-brand-900">
                         {product.title}
                       </h2>
                       <p className="mt-1 text-[13px] leading-6 text-apple-gray line-clamp-2">
@@ -184,21 +224,20 @@ export default function SellerDashboardPage() {
                     </div>
 
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-[17px] font-semibold text-apple-black">
+                      <span className="text-[17px] font-bold text-[#4338CA]">
                         {thaiCurrencyFormatter.format(product.unitPrice)}
                       </span>
                       <span
-                        className={[
-                          "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                        className={
                           product.quantity > 0
-                            ? "bg-[#d1fae5] text-[#065f46]"
-                            : "bg-[#fee2e2] text-[#991b1b]",
-                        ].join(" ")}
+                            ? "inline-flex items-center gap-1.5 rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-1 text-[11px] font-bold text-[#4338CA]"
+                            : "inline-flex items-center gap-1.5 rounded-full border border-[#FECACA] bg-[#FEE2E2] px-2.5 py-1 text-[11px] font-bold text-[#991B1B]"
+                        }
                       >
                         <span
                           className={[
                             "inline-block h-1.5 w-1.5 rounded-full",
-                            product.quantity > 0 ? "bg-apple-green" : "bg-apple-red",
+                            product.quantity > 0 ? "bg-[#6366F1]" : "bg-[#FF3B30]",
                           ].join(" ")}
                         />
                         {product.quantity > 0 ? `${product.quantity} in stock` : "Out of stock"}
@@ -209,7 +248,7 @@ export default function SellerDashboardPage() {
                       Updated {new Date(product.updatedAt).toLocaleDateString("en-GB")}
                     </p>
 
-                    <div className="flex gap-3">
+                    <div className="mt-4 flex gap-2 px-0 pb-0">
                       <AppleButton
                         fullWidth
                         to={`/seller/products/${product.id}/edit`}
@@ -220,10 +259,12 @@ export default function SellerDashboardPage() {
                       </AppleButton>
                       <AppleButton
                         fullWidth
-                        loading={isDeleting}
                         onClick={() => {
-                          setDeletingId(product.id);
-                          void deleteMutation.mutateAsync(product.id);
+                          deleteMutation.reset();
+                          setPendingDeleteProduct({
+                            id: product.id,
+                            title: product.title,
+                          });
                         }}
                         variant="destructive"
                         className="px-4 py-2 text-[13px]"
@@ -240,12 +281,12 @@ export default function SellerDashboardPage() {
 
         {!isLoading && !error && sortedProducts.length === 0 ? (
           <AppleCard className="mt-8 grid place-items-center py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-apple-gray-light shadow-sm">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 shadow-sm">
               <svg
                 aria-hidden="true"
                 fill="none"
                 viewBox="0 0 24 24"
-                className="h-8 w-8 text-apple-gray"
+                className="h-8 w-8 text-brand-600"
               >
                 <path
                   d="M4 7.5h16v9H4zM8 7.5l2-3h4l2 3M4 16.5h16"
@@ -256,20 +297,121 @@ export default function SellerDashboardPage() {
                 />
               </svg>
             </div>
-            <h2 className="mt-6 text-[24px] font-semibold tracking-[-0.03em] text-apple-black">
+            <h2 className="mt-6 text-[24px] font-semibold tracking-[-0.03em] text-brand-900">
               No products yet
             </h2>
             <p className="mt-3 max-w-md text-[17px] leading-7 text-apple-gray">
               Start by adding your first product.
             </p>
             <div className="mt-8">
-              <AppleButton to="/seller/products/new" variant="primary" className="px-5 py-2.5 text-[15px]">
+              <AppleButton
+                to="/seller/products/create"
+                variant="primary"
+                className="px-5 py-2.5 text-[15px]"
+              >
                 Add Product
               </AppleButton>
             </div>
           </AppleCard>
         ) : null}
       </section>
-    </main>
+
+      {pendingDeleteProduct ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]/45 px-4 py-6 backdrop-blur-sm"
+          onClick={() => {
+            deleteMutation.reset();
+            setPendingDeleteProduct(null);
+          }}
+        >
+          <AppleCard
+            aria-describedby="delete-product-description"
+            aria-labelledby="delete-product-title"
+            aria-modal="true"
+            className="w-full max-w-[440px] overflow-hidden border border-[#E0E7FF] bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            role="dialog"
+          >
+            <div className="h-1 w-full bg-gradient-to-r from-brand-500 via-[#FF5A52] to-[#FF3B30]" />
+            <div className="px-5 pb-5 pt-5 sm:px-8 sm:pb-8 sm:pt-7">
+              <div className="mb-4 flex items-start gap-3 sm:gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FEE2E2] text-[#D92D20] sm:h-12 sm:w-12">
+                  <svg
+                    aria-hidden="true"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
+                  >
+                    <path
+                      d="M12 9v4m0 4h.01M10.3 4.1l-7.1 12.2A2 2 0 0 0 4.9 19h14.2a2 2 0 0 0 1.7-2.7L13.7 4.1a2 2 0 0 0-3.4 0Z"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.8"
+                    />
+                  </svg>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#D92D20]">
+                    Confirm deletion
+                  </p>
+                  <h2
+                    className="text-[22px] font-bold tracking-[-0.03em] leading-tight text-[#1E1B4B] sm:text-[24px]"
+                    id="delete-product-title"
+                  >
+                    Delete this product?
+                  </h2>
+                </div>
+              </div>
+
+              <p
+                className="text-[15px] leading-7 text-[#6E6E73]"
+                id="delete-product-description"
+              >
+                This will permanently remove{" "}
+                <span className="font-semibold text-[#1E1B4B]">
+                  {pendingDeleteProduct.title}
+                </span>{" "}
+                from your seller dashboard. This action cannot be undone.
+              </p>
+
+              {deleteMutation.isError ? (
+                <p className="mt-4 rounded-[14px] border border-[#FECACA] bg-[#FFF1F1] px-4 py-3 text-[13px] leading-6 text-apple-red">
+                  We could not delete that product. Please try again.
+                </p>
+              ) : null}
+
+              <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <AppleButton
+                  fullWidth
+                  variant="ghost"
+                  onClick={() => {
+                    deleteMutation.reset();
+                    setPendingDeleteProduct(null);
+                  }}
+                  className="h-12 bg-[#F5F5F7] px-6 text-[15px] text-[#1E1B4B] hover:bg-[#E8E8ED] focus-visible:ring-brand-500 sm:w-[132px]"
+                >
+                  Cancel
+                </AppleButton>
+                <AppleButton
+                  fullWidth
+                  loading={deleteMutation.isPending && deletingId === pendingDeleteProduct.id}
+                  onClick={() => {
+                    setDeletingId(pendingDeleteProduct.id);
+                    void deleteMutation.mutateAsync(pendingDeleteProduct.id);
+                  }}
+                  variant="destructive"
+                  className="h-12 px-6 text-[15px] font-semibold text-white shadow-[0_4px_14px_rgba(255,59,48,0.34)] hover:shadow-[0_6px_20px_rgba(255,59,48,0.44)] focus-visible:ring-[#FF3B30] sm:w-[132px]"
+                >
+                  Delete
+                </AppleButton>
+              </div>
+            </div>
+          </AppleCard>
+        </div>
+      ) : null}
+    </>
   );
 }

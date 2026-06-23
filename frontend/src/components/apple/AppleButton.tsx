@@ -26,26 +26,37 @@ type LinkProps = CommonProps & {
 function getVariantClasses(variant: Variant) {
   switch (variant) {
     case "secondary":
-      return "bg-apple-gray-light text-apple-black hover:bg-[#e8e8ed]";
+      return "bg-[#EEF2FF] text-[#4338CA] hover:bg-[#E0E7FF]";
     case "ghost":
-      return "border border-apple-border bg-transparent text-apple-black hover:bg-apple-gray-light";
+      return "text-[#6E6E73] hover:bg-[#F5F5F7] hover:text-[#1E1B4B]";
     case "destructive":
-      return "border border-apple-red bg-transparent text-apple-red hover:bg-apple-red hover:text-white";
+      return "border-2 border-[#FF3B30] bg-[#FF3B30] text-white shadow-[0_8px_20px_rgba(255,59,48,0.18)] hover:border-[#E22E23] hover:bg-[#E22E23] hover:shadow-[0_10px_24px_rgba(255,59,48,0.28)]";
     case "primary":
     default:
-      return "bg-apple-blue text-white hover:bg-apple-blue-hover";
+      return "bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white hover:from-[#4F46E5] hover:to-[#7C3AED]";
   }
 }
 
 function baseClasses({ fullWidth, loading, variant }: { fullWidth?: boolean; loading?: boolean; variant: Variant }) {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-apple-pill px-6 py-3 text-[17px] font-medium tracking-[-0.01em] shadow-sm transition-all duration-200 ease-apple active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-apple-pill px-6 py-3 text-[15px] font-semibold tracking-[-0.01em] outline-none transition-all duration-200 ease-apple active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-card disabled:pointer-events-none disabled:opacity-60",
     getVariantClasses(variant),
+    variant === "primary" ? "shadow-[0_4px_14px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.5)] hover:scale-[1.02]" : "",
     fullWidth ? "w-full" : "",
     loading ? "cursor-progress" : "",
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+function getButtonDomProps(props: ButtonProps) {
+  const domProps = { ...props };
+  delete domProps.variant;
+  delete domProps.children;
+  delete domProps.fullWidth;
+  delete domProps.className;
+  delete domProps.loading;
+  return domProps;
 }
 
 export default function AppleButton(props: ButtonProps | LinkProps) {
@@ -78,13 +89,13 @@ export default function AppleButton(props: ButtonProps | LinkProps) {
     );
   }
 
-  const { type = "button", disabled, ...buttonProps } = props;
+  const { type = "button", disabled, ...buttonProps } = getButtonDomProps(props);
   return (
     <button
       type={type}
       disabled={disabled || loading}
-      className={classes}
       {...buttonProps}
+      className={classes}
     >
       {loading ? "Loading..." : children}
     </button>

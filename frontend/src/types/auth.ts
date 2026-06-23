@@ -4,6 +4,7 @@ export interface AuthUser {
   id: number;
   email: string;
   role: UserRole;
+  username?: string | null;
 }
 
 export interface AuthTokens {

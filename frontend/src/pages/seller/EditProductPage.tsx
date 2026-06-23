@@ -38,18 +38,21 @@ export default function EditProductPage() {
   };
 
   return (
-    <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
-      <section className="mx-auto max-w-6xl px-6 py-10">
-        <AppleButton to="/seller" variant="ghost" className="px-4 py-2 text-[13px]">
+    <section className="animate-fade-in space-y-8">
+        <AppleButton
+          to="/seller"
+          variant="ghost"
+          className="px-4 py-2 text-[13px] border-brand-200 text-brand-700"
+        >
           {"<"} Products
         </AppleButton>
 
-        <AppleCard className="mt-8 space-y-4">
+        <AppleCard className="mt-8 space-y-4 border-t-4 border-t-violet-500">
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-violet-600">
               Edit product
             </p>
-            <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight sm:text-[40px]">
+            <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight text-brand-900 sm:text-[40px]">
               Edit Product
             </h1>
             <p className="max-w-2xl text-[15px] leading-7 text-apple-gray">
@@ -73,20 +76,20 @@ export default function EditProductPage() {
         </AppleCard>
 
         {isLoading ? (
-          <AppleCard className="mt-8 space-y-4">
+          <AppleCard className="mt-8 space-y-4 border-t-4 border-t-brand-500">
             <div className="space-y-3">
               <div className="h-4 w-28 rounded-full apple-skeleton animate-shimmer" />
               <div className="h-8 w-48 rounded-full apple-skeleton animate-shimmer" />
               <div className="h-5 w-72 rounded-full apple-skeleton animate-shimmer" />
             </div>
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
-              <div className="space-y-4 rounded-apple-card bg-apple-gray-light p-6">
+              <div className="space-y-4 rounded-apple-card bg-brand-50 p-6">
                 <div className="h-4 w-32 rounded-full apple-skeleton animate-shimmer" />
                 <div className="h-12 rounded-apple-input apple-skeleton animate-shimmer" />
                 <div className="h-4 w-28 rounded-full apple-skeleton animate-shimmer" />
                 <div className="h-32 rounded-apple-input apple-skeleton animate-shimmer" />
               </div>
-              <div className="space-y-4 rounded-apple-card bg-apple-gray-light p-6">
+              <div className="space-y-4 rounded-apple-card bg-violet-50 p-6">
                 <div className="h-4 w-28 rounded-full apple-skeleton animate-shimmer" />
                 <div className="h-64 rounded-apple-card apple-skeleton animate-shimmer" />
               </div>
@@ -110,7 +113,6 @@ export default function EditProductPage() {
             />
           </div>
         ) : null}
-      </section>
-    </main>
+    </section>
   );
 }

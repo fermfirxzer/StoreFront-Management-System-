@@ -5,6 +5,26 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: {
+          50: "#EEF2FF",
+          100: "#E0E7FF",
+          200: "#C7D2FE",
+          400: "#818CF8",
+          500: "#6366F1",
+          600: "#4F46E5",
+          700: "#4338CA",
+          900: "#1E1B4B",
+        },
+        violet: {
+          400: "#A78BFA",
+          500: "#8B5CF6",
+          600: "#7C3AED",
+        },
+        surface: {
+          DEFAULT: "#F8F7FF",
+          card: "#FFFFFF",
+          input: "#F5F4FF",
+        },
         apple: {
           blue: "#0071E3",
           "blue-hover": "#0077ED",
@@ -15,6 +35,10 @@ export default {
           red: "#FF3B30",
           green: "#34C759",
         },
+      },
+      backgroundImage: {
+        "brand-gradient": "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
+        "card-shimmer": "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)",
       },
       fontFamily: {
         sans: [

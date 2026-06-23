@@ -10,9 +10,9 @@ export default function ProtectedRoute() {
 
   if (isBootstrapping) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white text-slate-600">
+      <div className="flex min-h-[50vh] items-center justify-center text-slate-600">
         Restoring your session...
-      </main>
+      </div>
     );
   }
 

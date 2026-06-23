@@ -30,18 +30,21 @@ export default function CreateProductPage() {
   };
 
   return (
-    <main className="apple-surface min-h-screen text-apple-black animate-fade-in">
-      <section className="mx-auto max-w-6xl px-6 py-10">
-        <AppleButton to="/seller" variant="ghost" className="px-4 py-2 text-[13px]">
+    <section className="animate-fade-in space-y-8">
+        <AppleButton
+          to="/seller"
+          variant="ghost"
+          className="px-4 py-2 text-[13px] border-brand-200 text-brand-700"
+        >
           {"<"} Products
         </AppleButton>
 
-        <AppleCard className="mt-8 space-y-4">
+        <AppleCard className="mt-8 space-y-4 border-t-4 border-t-brand-500">
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-apple-gray">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
               Create product
             </p>
-            <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight sm:text-[40px]">
+            <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight text-brand-900 sm:text-[40px]">
               New Product
             </h1>
             <p className="max-w-2xl text-[15px] leading-7 text-apple-gray">
@@ -63,7 +66,6 @@ export default function CreateProductPage() {
             submitLabel="Save Product"
           />
         </div>
-      </section>
-    </main>
+    </section>
   );
 }
