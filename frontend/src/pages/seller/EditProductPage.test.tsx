@@ -8,6 +8,11 @@ const mockNavigate = vi.fn();
 const mockInvalidateQueries = vi.fn();
 const mockUpdateProduct = vi.fn();
 
+type MutationConfig<TVariables, TData> = {
+  mutationFn: (variables: TVariables) => Promise<TData> | TData;
+  onSuccess?: (data: TData, variables: TVariables, context: unknown) => void | Promise<void>;
+};
+
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
   return {
@@ -31,11 +36,11 @@ vi.mock("@tanstack/react-query", () => ({
     isLoading: false,
     error: null,
   }),
-  useMutation: (config: any) => ({
+  useMutation: <TData, TVariables>(config: MutationConfig<TVariables, TData>) => ({
     isPending: false,
     mutateAsync: async (values: unknown) => {
-      const result = await config.mutationFn(values);
-      await config.onSuccess?.(result, values, undefined);
+      const result = await config.mutationFn(values as TVariables);
+      await config.onSuccess?.(result, values as TVariables, undefined);
       return result;
     },
   }),

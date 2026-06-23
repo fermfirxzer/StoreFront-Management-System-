@@ -3,12 +3,22 @@ import { MemoryRouter } from "react-router-dom";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import SellerDashboardPage from "./SellerDashboardPage";
 import { useAuthStore } from "../../stores/authStore";
+import type { Product } from "../../types/product";
 
 const mockClearSession = vi.fn();
 const mockInvalidateQueries = vi.fn();
 const mockDeleteProduct = vi.fn();
 
-let queryResult: any = {
+type MutationConfig<TVariables, TData> = {
+  mutationFn: (variables: TVariables) => Promise<TData> | TData;
+  onSuccess?: (data: TData, variables: TVariables, context: unknown) => void | Promise<void>;
+};
+
+let queryResult: {
+  data: Product[];
+  isLoading: boolean;
+  error: Error | null;
+} = {
   data: [],
   isLoading: false,
   error: null,
@@ -17,13 +27,13 @@ let queryResult: any = {
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
   useQuery: () => queryResult,
-  useMutation: (config: any) => ({
+  useMutation: <TData, TVariables>(config: MutationConfig<TVariables, TData>) => ({
     isPending: false,
     isError: false,
     reset: vi.fn(),
     mutateAsync: async (id: string) => {
-      const result = await config.mutationFn(id);
-      await config.onSuccess?.(result, id, undefined);
+      const result = await config.mutationFn(id as TVariables);
+      await config.onSuccess?.(result, id as TVariables, undefined);
       return result;
     },
   }),
