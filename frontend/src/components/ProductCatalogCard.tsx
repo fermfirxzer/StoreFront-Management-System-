@@ -38,7 +38,7 @@ export default function ProductCatalogCard({
       <div className="space-y-4 px-4 pb-4 pt-4">
         <div className="space-y-1">
           <Link className="block" to={detailHref}>
-            <h2 className="text-[15px] font-semibold leading-snug tracking-[-0.01em] text-brand-900">
+            <h2 className="line-clamp-1 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-brand-900">
               {product.title}
             </h2>
           </Link>
@@ -69,8 +69,8 @@ export default function ProductCatalogCard({
         </div>
 
         <div className="flex items-center justify-between gap-3 text-[12px] text-apple-gray">
-          <span>{product.seller.email}</span>
-          <span>{new Date(product.createdAt).toLocaleDateString("en-GB")}</span>
+          <span className="min-w-0 truncate">{product.seller.email}</span>
+          <span className="shrink-0">{new Date(product.createdAt).toLocaleDateString("en-GB")}</span>
         </div>
 
         <AppleButton className="w-full" to={detailHref} variant="secondary">

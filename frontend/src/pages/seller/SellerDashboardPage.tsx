@@ -276,7 +276,7 @@ export default function SellerDashboardPage() {
 
                   <div className="space-y-4 px-4 pb-4 pt-4">
                     <div>
-                      <h2 className="text-[15px] font-semibold leading-snug tracking-[-0.01em] text-brand-900">
+                      <h2 className="line-clamp-1 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-brand-900">
                         {product.title}
                       </h2>
                       <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-apple-gray">
