@@ -4,7 +4,11 @@ from decimal import Decimal
 from uuid import UUID
 
 from django.core.exceptions import PermissionDenied
+from django.db.models import Case
+from django.db.models import IntegerField
 from django.db.models import QuerySet
+from django.db.models import Value
+from django.db.models import When
 from rest_framework.exceptions import NotFound
 
 from apps.accounts.models import User
@@ -20,6 +24,7 @@ class ProductService:
         min_price: Decimal | None = None,
         max_price: Decimal | None = None,
         in_stock: bool | None = None,
+        sort_by: str = "stock-priority",
     ) -> QuerySet[Product]:
         queryset = Product.objects.select_related("seller").all()
 
@@ -34,7 +39,18 @@ class ProductService:
         if in_stock is False:
             queryset = queryset.filter(quantity=0)
 
-        return queryset
+        if sort_by == "price-asc":
+            return queryset.order_by("unit_price", "-created_at")
+        if sort_by == "price-desc":
+            return queryset.order_by("-unit_price", "-created_at")
+
+        return queryset.annotate(
+            stock_priority=Case(
+                When(quantity__gt=0, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by("stock_priority", "-created_at")
 
     def create_product(
         self,
@@ -80,13 +96,22 @@ class ProductService:
         *,
         seller: User,
         search: str | None = None,
+        sort_by: str = "updated-desc",
     ) -> QuerySet[Product]:
         queryset = self.get_seller_products(seller)
 
         if search:
             queryset = queryset.filter(title__icontains=search)
 
-        return queryset
+        sort_mappings = {
+            "updated-desc": ["-updated_at"],
+            "price-desc": ["-unit_price", "-updated_at"],
+            "price-asc": ["unit_price", "-updated_at"],
+            "quantity-desc": ["-quantity", "-updated_at"],
+            "quantity-asc": ["quantity", "-updated_at"],
+        }
+
+        return queryset.order_by(*sort_mappings.get(sort_by, ["-updated_at"]))
 
     def get_product_by_id(self, product_id: UUID) -> Product:
         try:

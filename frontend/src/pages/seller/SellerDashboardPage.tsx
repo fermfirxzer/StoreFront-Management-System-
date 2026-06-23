@@ -49,8 +49,9 @@ export default function SellerDashboardPage() {
       page: parsePageParam(searchParams.get("page")),
       pageSize: defaultPageSize,
       search: parseSearchParam(searchParams.get("search")),
+      sortBy,
     }),
-    [searchParams]
+    [searchParams, sortBy]
   );
 
   const { data, isLoading, isFetching, error } = useSellerProductsQuery(filters);
@@ -65,22 +66,6 @@ export default function SellerDashboardPage() {
     onError: () => {
       setDeletingId(null);
     },
-  });
-
-  const sortedProducts = [...(data?.results ?? [])].sort((left, right) => {
-    switch (sortBy) {
-      case "price-desc":
-        return right.unitPrice - left.unitPrice;
-      case "price-asc":
-        return left.unitPrice - right.unitPrice;
-      case "quantity-desc":
-        return right.quantity - left.quantity;
-      case "quantity-asc":
-        return left.quantity - right.quantity;
-      case "updated-desc":
-      default:
-        return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
-    }
   });
 
   const totalPages = Math.max(1, Math.ceil((data?.count ?? 0) / defaultPageSize));
@@ -231,10 +216,10 @@ export default function SellerDashboardPage() {
           </AppleCard>
         ) : null}
 
-        {!isLoading && !error && sortedProducts.length > 0 ? (
+        {!isLoading && !error && (data?.results.length ?? 0) > 0 ? (
           <>
             <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-              {sortedProducts.map((product) => (
+              {data?.results.map((product) => (
                 <AppleCard
                   as="article"
                   className="overflow-hidden border border-[#E0E7FF] p-0 shadow-[0_2px_12px_rgba(99,102,241,0.08)] hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(99,102,241,0.15)]"
@@ -346,7 +331,7 @@ export default function SellerDashboardPage() {
           </>
         ) : null}
 
-        {!isLoading && !error && sortedProducts.length === 0 ? (
+        {!isLoading && !error && (data?.results.length ?? 0) === 0 ? (
           <AppleCard className="mt-8 grid place-items-center py-16 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 shadow-sm">
               <svg

@@ -117,10 +117,10 @@ describe("product api", () => {
       search: "lamp",
       minPrice: "10",
       maxPrice: "100",
-      inStock: true,
+      sortBy: "price-asc",
     });
     expect(get).toHaveBeenCalledWith(
-      "/products/?page=2&page_size=12&search=lamp&min_price=10&max_price=100&in_stock=true"
+      "/products/?page=2&page_size=12&search=lamp&min_price=10&max_price=100&sort=price-asc"
     );
     expect(paginated.results[0]).toMatchObject({
       id: "product-1",
@@ -133,8 +133,9 @@ describe("product api", () => {
       page: 1,
       pageSize: 12,
       search: "desk",
+      sortBy: "price-desc",
     });
-    expect(get).toHaveBeenCalledWith("/products/seller/?page=1&page_size=12&search=desk");
+    expect(get).toHaveBeenCalledWith("/products/seller/?page=1&page_size=12&search=desk&sort=price-desc");
     expect(sellerProducts.results[0].title).toBe("Desk lamp");
 
     const single = await api.getProductById("product-1");

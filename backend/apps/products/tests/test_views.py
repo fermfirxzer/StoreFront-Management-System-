@@ -78,6 +78,8 @@ class ProductViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["data"]["count"], 2)
         self.assertEqual(len(response.data["data"]["results"]), 2)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+        self.assertEqual(response.data["data"]["results"][1]["title"], "Phone stand")
 
     def test_marketplace_list_uses_paginated_response(self) -> None:
         self.authenticate(self.buyer)
@@ -152,6 +154,22 @@ class ProductViewTests(APITestCase):
         self.assertEqual(response.data["data"]["count"], 1)
         self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
 
+    def test_marketplace_sorts_by_price_ascending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "price-asc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Phone stand")
+
+    def test_marketplace_sorts_by_price_descending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "price-desc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
     def test_marketplace_response_does_not_expose_private_user_fields(self) -> None:
         self.authenticate(self.buyer)
 
@@ -202,6 +220,42 @@ class ProductViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["data"]["count"], 1)
         self.assertEqual(len(response.data["data"]["results"]), 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Office chair")
+
+    def test_seller_product_list_sorts_by_price_descending(self) -> None:
+        self.authenticate(self.seller)
+        Product.objects.create(
+            seller=self.seller,
+            title="Office chair",
+            description="Mesh back",
+            unit_price=Decimal("99.99"),
+            quantity=4,
+        )
+
+        response = self.client.get(
+            reverse("seller-product-list-create"),
+            {"sort": "price-desc"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Office chair")
+
+    def test_seller_product_list_sorts_by_quantity_descending(self) -> None:
+        self.authenticate(self.seller)
+        Product.objects.create(
+            seller=self.seller,
+            title="Office chair",
+            description="Mesh back",
+            unit_price=Decimal("99.99"),
+            quantity=9,
+        )
+
+        response = self.client.get(
+            reverse("seller-product-list-create"),
+            {"sort": "quantity-desc"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["data"]["results"][0]["title"], "Office chair")
 
     def test_valid_data_creates_product_successfully(self) -> None:

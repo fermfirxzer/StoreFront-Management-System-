@@ -123,6 +123,7 @@ describe("SellerDashboardPage", () => {
     fireEvent.change(screen.getByDisplayValue("Latest update"), {
       target: { value: "price-asc" },
     });
+    expect(screen.getByDisplayValue("Price: low to high")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByRole("button", { name: "Previous" })).toBeInTheDocument();
 

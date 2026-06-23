@@ -21,13 +21,14 @@ export interface ProductFilters {
   search?: string;
   minPrice?: string;
   maxPrice?: string;
-  inStock?: boolean | null;
+  sortBy?: "stock-priority" | "price-asc" | "price-desc";
 }
 
 export interface SellerProductFilters {
   page: number;
   pageSize?: number;
   search?: string;
+  sortBy?: "updated-desc" | "price-desc" | "price-asc" | "quantity-desc" | "quantity-asc";
 }
 
 export interface CreateProductPayload {

@@ -46,13 +46,7 @@ export default function Navbar({ containerClass }: NavbarProps) {
             + Add Product
           </NavLink>,
         ]
-      : role === "BUYER"
-        ? [
-            <NavLink key="browse" to="/products" onClick={closeMobileMenu}>
-              Browse
-            </NavLink>,
-          ]
-        : [];
+      : [];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] shadow-[0_2px_16px_rgba(99,102,241,0.35)] backdrop-blur-sm">

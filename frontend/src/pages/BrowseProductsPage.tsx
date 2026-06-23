@@ -23,14 +23,13 @@ function parseTextParam(value: string | null): string | undefined {
   return value;
 }
 
-function parseInStockParam(value: string | null): boolean | null {
-  if (value === "true") {
-    return true;
+function parseSortParam(
+  value: string | null
+): ProductFilters["sortBy"] {
+  if (value === "price-asc" || value === "price-desc" || value === "stock-priority") {
+    return value;
   }
-  if (value === "false") {
-    return false;
-  }
-  return null;
+  return "stock-priority";
 }
 
 export default function BrowseProductsPage() {
@@ -43,7 +42,7 @@ export default function BrowseProductsPage() {
       search: parseTextParam(searchParams.get("search")),
       minPrice: parseTextParam(searchParams.get("min_price")),
       maxPrice: parseTextParam(searchParams.get("max_price")),
-      inStock: parseInStockParam(searchParams.get("in_stock")),
+      sortBy: parseSortParam(searchParams.get("sort")),
     }),
     [searchParams]
   );
@@ -79,11 +78,11 @@ export default function BrowseProductsPage() {
       }
     }
 
-    if (nextValues.inStock !== undefined) {
-      if (nextValues.inStock === null) {
-        nextParams.delete("in_stock");
+    if (nextValues.sortBy !== undefined) {
+      if (nextValues.sortBy === "stock-priority") {
+        nextParams.delete("sort");
       } else {
-        nextParams.set("in_stock", String(nextValues.inStock));
+        nextParams.set("sort", nextValues.sortBy);
       }
     }
 
@@ -147,30 +146,23 @@ export default function BrowseProductsPage() {
 
           <label className="block">
             <span className="mb-2 block text-[13px] font-medium uppercase tracking-[0.2px] text-apple-black">
-              Stock
+              Sort
             </span>
             <select
               className="w-full cursor-pointer rounded-apple-input border border-brand-200 bg-surface-input px-4 py-3 text-[17px] text-apple-black outline-none transition-all duration-150 ease-apple focus:border-brand-500 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"
               onChange={(event) => {
-                const value = event.target.value;
                 updateFilters({
-                  inStock: value === "all" ? null : value === "in-stock",
+                  sortBy: event.target.value as ProductFilters["sortBy"],
                   page: 1,
                 });
               }}
-              value={
-                filters.inStock === null
-                  ? "all"
-                  : filters.inStock
-                    ? "in-stock"
-                    : "out-of-stock"
-              }
+              value={filters.sortBy ?? "stock-priority"}
             >
-              <option value="all">All</option>
-              <option value="in-stock">In stock</option>
-              <option value="out-of-stock">Out of stock</option>
+              <option value="stock-priority">In stock first</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
             </select>
-            <p className="mt-2 text-[12px] text-apple-gray">Filter by availability</p>
+            <p className="mt-2 text-[12px] text-apple-gray">Choose how products are ordered</p>
           </label>
         </div>
       </AppleCard>
@@ -242,7 +234,7 @@ export default function BrowseProductsPage() {
                 No products match these filters
               </h2>
               <p className="mt-3 max-w-md text-[17px] leading-7 text-apple-gray">
-                Try changing the search text, price range, or stock filter.
+                Try changing the search text, price range, or sort option.
               </p>
             </AppleCard>
           )}

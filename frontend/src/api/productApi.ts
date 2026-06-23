@@ -75,8 +75,8 @@ function buildProductQueryParams(filters: ProductFilters): URLSearchParams {
   if (filters.maxPrice) {
     params.set("max_price", filters.maxPrice);
   }
-  if (filters.inStock !== null && filters.inStock !== undefined) {
-    params.set("in_stock", String(filters.inStock));
+  if (filters.sortBy) {
+    params.set("sort", filters.sortBy);
   }
 
   return params;
@@ -104,6 +104,9 @@ function buildSellerProductQueryParams(filters: SellerProductFilters): URLSearch
   }
   if (filters.search) {
     params.set("search", filters.search);
+  }
+  if (filters.sortBy) {
+    params.set("sort", filters.sortBy);
   }
 
   return params;

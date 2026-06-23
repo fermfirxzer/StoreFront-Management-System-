@@ -68,11 +68,11 @@ describe("BrowseProductsPage", () => {
       target: { value: "lamp" },
     });
     fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: "out-of-stock" },
+      target: { value: "price-desc" },
     });
 
     expect(screen.getByDisplayValue("lamp")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Out of stock")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Price: high to low")).toBeInTheDocument();
   });
 
   it("shows loading and empty states", () => {

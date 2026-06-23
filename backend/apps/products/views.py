@@ -53,6 +53,7 @@ class SellerProductListCreateView(APIView):
         products = self.service.get_paginated_seller_products(
             seller=request.user,
             search=request.query_params.get("search"),
+            sort_by=request.query_params.get("sort", "updated-desc"),
         )
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(products, request, view=self)
@@ -82,6 +83,7 @@ class ProductListView(APIView):
             min_price=parse_decimal_param(request.query_params.get("min_price")),
             max_price=parse_decimal_param(request.query_params.get("max_price")),
             in_stock=parse_bool_param(request.query_params.get("in_stock")),
+            sort_by=request.query_params.get("sort", "stock-priority"),
         )
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(products, request, view=self)
