@@ -243,8 +243,8 @@ export default function CartPage() {
                     <p className="text-[13px] leading-6 text-brand-700">
                       Order created successfully.
                     </p>
-                    <AppleButton to="/orders" variant="ghost">
-                      View order
+                    <AppleButton to="/history" variant="ghost">
+                      View history
                     </AppleButton>
                   </div>
                 ) : null}

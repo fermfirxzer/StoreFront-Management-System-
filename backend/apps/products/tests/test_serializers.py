@@ -6,6 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework import serializers
 
+from apps.products.models import MAX_UNIT_PRICE
 from apps.products.models import Product
 from apps.products.serializers import ProductWriteSerializer
 from django.contrib.auth import get_user_model
@@ -20,6 +21,19 @@ class ProductWriteSerializerTests(TestCase):
                 "title": "Camera",
                 "description": "Compact",
                 "unit_price": Decimal("0.00"),
+                "quantity": 1,
+            }
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("unit_price", serializer.errors)
+
+    def test_unit_price_must_not_exceed_maximum(self) -> None:
+        serializer = ProductWriteSerializer(
+            data={
+                "title": "Camera",
+                "description": "Compact",
+                "unit_price": MAX_UNIT_PRICE + Decimal("0.01"),
                 "quantity": 1,
             }
         )

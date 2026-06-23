@@ -27,12 +27,14 @@ export default function ProductCatalogCard({
     >
       <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
 
-      <Link className="block aspect-video bg-[#EEF2FF]" to={detailHref}>
-        <img
-          alt={product.image ? product.title : `${product.title} placeholder`}
-          className="h-full w-full object-cover"
-          src={product.image ?? productPlaceholder}
-        />
+      <Link className="block" to={detailHref}>
+        <div className="flex h-48 w-full items-center justify-center overflow-hidden bg-[#F8FAFF] px-4 py-4 sm:h-44">
+          <img
+            alt={product.image ? product.title : `${product.title} placeholder`}
+            className="max-h-full max-w-full object-contain object-center"
+            src={product.image ?? productPlaceholder}
+          />
+        </div>
       </Link>
 
       <div className="space-y-4 px-4 pb-4 pt-4">

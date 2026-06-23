@@ -28,6 +28,13 @@ class OrderService:
             .order_by("-created_at")
         )
 
+    def get_sales_for_seller(self, seller: User):
+        return (
+            OrderItem.objects.filter(product__seller=seller)
+            .select_related("product", "order__buyer")
+            .order_by("-order__created_at", "-created_at")
+        )
+
     def checkout(self, *, buyer: User) -> Order:
         with transaction.atomic():
             cart = (

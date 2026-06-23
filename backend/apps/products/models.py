@@ -4,9 +4,12 @@ import uuid
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import CheckConstraint
 from django.db.models import Q
+
+MAX_UNIT_PRICE = Decimal("10000000.00")
 
 
 class Product(models.Model):
@@ -40,4 +43,11 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+    def clean(self) -> None:
+        super().clean()
+        if self.unit_price > MAX_UNIT_PRICE:
+            raise ValidationError(
+                {"unit_price": "Price must be 10,000,000 THB or less."}
+            )
 

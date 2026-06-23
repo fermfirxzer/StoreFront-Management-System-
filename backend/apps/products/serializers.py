@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
+from .models import MAX_UNIT_PRICE
 from .models import Product
 
 
@@ -15,6 +16,8 @@ class ProductWriteSerializer(serializers.ModelSerializer):
     def validate_unit_price(self, value: Decimal) -> Decimal:
         if value <= 0:
             raise serializers.ValidationError("Unit price must be greater than 0.")
+        if value > MAX_UNIT_PRICE:
+            raise serializers.ValidationError("Price must be 10,000,000 THB or less.")
         return value
 
     def validate_quantity(self, value: int) -> int:

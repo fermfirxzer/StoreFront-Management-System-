@@ -5,7 +5,7 @@ describe("order api", () => {
     vi.resetModules();
   });
 
-  it("maps checkout and order list responses", async () => {
+  it("maps checkout, buyer order list, and seller sales responses", async () => {
     const post = vi.fn().mockResolvedValue({
       data: {
         data: {
@@ -28,19 +28,44 @@ describe("order api", () => {
         },
       },
     });
-    const get = vi.fn().mockResolvedValue({
-      data: {
-        data: [
-          {
-            id: "order-1",
-            subtotal: "49.98",
-            total_quantity: 2,
-            items: [],
-            created_at: "2026-06-23T00:00:00.000Z",
-            updated_at: "2026-06-23T00:00:00.000Z",
+    const get = vi.fn((url: string) => {
+      if (url === "/orders/sales/") {
+        return Promise.resolve({
+          data: {
+            data: [
+              {
+                id: "sale-1",
+                order_id: "order-1",
+                product_id: "product-1",
+                product_title: "Desk lamp",
+                unit_price: "24.99",
+                quantity: 2,
+                line_total: "49.98",
+                sold_at: "2026-06-23T00:00:00.000Z",
+                buyer: {
+                  id: 2,
+                  email: "buyer@example.com",
+                },
+              },
+            ],
           },
-        ],
-      },
+        });
+      }
+
+      return Promise.resolve({
+        data: {
+          data: [
+            {
+              id: "order-1",
+              subtotal: "49.98",
+              total_quantity: 2,
+              items: [],
+              created_at: "2026-06-23T00:00:00.000Z",
+              updated_at: "2026-06-23T00:00:00.000Z",
+            },
+          ],
+        },
+      });
     });
 
     vi.doMock("./client", () => ({
@@ -57,5 +82,9 @@ describe("order api", () => {
     const orders = await api.getOrders();
     expect(get).toHaveBeenCalledWith("/orders/");
     expect(orders[0].totalQuantity).toBe(2);
+
+    const sales = await api.getSellerSales();
+    expect(get).toHaveBeenCalledWith("/orders/sales/");
+    expect(sales[0].buyer.email).toBe("buyer@example.com");
   });
 });

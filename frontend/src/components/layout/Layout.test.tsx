@@ -40,7 +40,7 @@ describe("Layout", () => {
   it("renders the logged-out shell", () => {
     renderWithProviders("/login", <div>Login content</div>);
 
-    expect(screen.getAllByText("Marketplace").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("StoreFront Management System").length).toBeGreaterThan(0);
     expect(screen.getByText("Login content")).toBeInTheDocument();
     expect(screen.getByText("For Buyers")).toBeInTheDocument();
     expect(screen.getByText("For Sellers")).toBeInTheDocument();

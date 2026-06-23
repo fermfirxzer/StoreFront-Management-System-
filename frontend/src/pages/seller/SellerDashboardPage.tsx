@@ -3,6 +3,7 @@ import { AlertTriangle, Search } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteProduct } from "../../api/productApi";
+import productPlaceholder from "../../assets/product-placeholder.svg";
 import AppleButton from "../../components/apple/AppleButton";
 import AppleCard from "../../components/apple/AppleCard";
 import AppleInput from "../../components/apple/AppleInput";
@@ -227,36 +228,12 @@ export default function SellerDashboardPage() {
                   key={product.id}
                 >
                   <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
-                  <div className="aspect-video bg-[#EEF2FF]">
-                    {product.image ? (
-                      <img
-                        alt={product.title}
-                        className="h-full w-full object-cover"
-                        src={product.image}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-t-[18px] bg-[#EEF2FF]">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E0E7FF]">
-                          <svg
-                            aria-hidden="true"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            className="h-5 w-5 text-[#6366F1]"
-                          >
-                            <path
-                              d="M4 7.5h16v9H4zM8 7.5l2-3h4l2 3M4 16.5h16"
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.8"
-                            />
-                          </svg>
-                        </div>
-                        <span className="text-[11px] font-medium text-[#6366F1]">
-                          No image
-                        </span>
-                      </div>
-                    )}
+                  <div className="flex h-48 w-full items-center justify-center overflow-hidden bg-[#F8FAFF] px-4 py-4 sm:h-44">
+                    <img
+                      alt={product.image ? product.title : `${product.title} placeholder`}
+                      className="max-h-full max-w-full object-contain object-center"
+                      src={product.image ?? productPlaceholder}
+                    />
                   </div>
 
                   <div className="space-y-4 px-4 pb-4 pt-4">

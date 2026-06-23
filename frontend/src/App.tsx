@@ -25,17 +25,19 @@ export default function App() {
         <Route path="/register" element={<Layout><RegisterPage /></Layout>} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<RoleLandingPage />} />
+          <Route path="/history" element={<Layout><OrdersPage /></Layout>} />
           <Route element={<RoleGuard allowedRole="BUYER" />}>
             <Route path="/products" element={<Layout><BrowseProductsPage /></Layout>} />
             <Route path="/products/:productId" element={<Layout><ProductDetailPage /></Layout>} />
             <Route path="/cart" element={<Layout><CartPage /></Layout>} />
-            <Route path="/orders" element={<Layout><OrdersPage /></Layout>} />
+            <Route path="/orders" element={<Navigate to="/history" replace />} />
           </Route>
           <Route element={<RoleGuard allowedRole="SELLER" />}>
             <Route path="/seller/dashboard" element={<Layout><SellerDashboardPage /></Layout>} />
             <Route path="/seller/products/create" element={<Layout><CreateProductPage /></Layout>} />
             <Route path="/seller/products/:productId/edit" element={<Layout><EditProductPage /></Layout>} />
             <Route path="/seller" element={<Navigate to="/seller/dashboard" replace />} />
+            <Route path="/seller/history" element={<Navigate to="/history" replace />} />
             <Route path="/seller/products/new" element={<Navigate to="/seller/products/create" replace />} />
           </Route>
         </Route>

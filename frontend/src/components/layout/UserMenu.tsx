@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { logoutRequest } from "../../api/auth";
 import type { AuthUser } from "../../types/auth";
 import { useAuthStore } from "../../stores/authStore";
@@ -74,6 +74,15 @@ export default function UserMenu({ user }: UserMenuProps) {
             {user.role}
           </p>
         </div>
+        <Link
+          className="block w-full px-4 py-3 text-left text-[14px] font-medium text-[#1E1B4B] transition-colors duration-150 hover:bg-[#F8FAFF]"
+          onClick={() => {
+            setIsOpen(false);
+          }}
+          to="/history"
+        >
+          History
+        </Link>
         <button
           className="w-full px-4 py-3 text-left text-[14px] font-medium text-[#FF3B30] transition-colors duration-150 hover:bg-[#FFF5F5]"
           onClick={() => {

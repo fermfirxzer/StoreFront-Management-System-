@@ -49,7 +49,7 @@ describe("ProductForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
     expect(window.URL.revokeObjectURL).toHaveBeenCalledWith("blob:preview");
 
-    fireEvent.change(screen.getByLabelText("Product title"), {
+    fireEvent.change(screen.getByRole("textbox", { name: /Product title/ }), {
       target: { value: "Desk lamp" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save Product" }));
@@ -57,5 +57,40 @@ describe("ProductForm", () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalled();
     });
+  });
+
+  it("shows live counters and clamps numeric inputs to the allowed maximums", async () => {
+    const onSubmit = vi.fn();
+
+    render(
+      <MemoryRouter>
+        <ProductForm isLoading={false} onSubmit={onSubmit} submitLabel="Save Product" />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("0/75")).toBeInTheDocument();
+    expect(screen.getByText("0/200")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("textbox", { name: /Product title/ }), {
+      target: { value: "x".repeat(80) },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /Description/ }), {
+      target: { value: "y".repeat(220) },
+    });
+
+    expect(screen.getByText("75/75")).toBeInTheDocument();
+    expect(screen.getByText("200/200")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /Product title/ })).toHaveValue("x".repeat(75));
+    expect(screen.getByRole("textbox", { name: /Description/ })).toHaveValue("y".repeat(200));
+
+    fireEvent.change(screen.getByRole("spinbutton", { name: /Price/ }), {
+      target: { value: "10000001" },
+    });
+    fireEvent.change(screen.getByRole("spinbutton", { name: /Quantity/ }), {
+      target: { value: "1000000" },
+    });
+
+    expect(screen.getByRole("spinbutton", { name: /Price/ })).toHaveValue(10000000);
+    expect(screen.getByRole("spinbutton", { name: /Quantity/ })).toHaveValue(999999);
   });
 });

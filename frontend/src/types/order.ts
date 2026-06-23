@@ -16,3 +16,20 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface SaleBuyer {
+  id: number;
+  email: string;
+}
+
+export interface SellerSale {
+  id: string;
+  orderId: string;
+  productId: string;
+  productTitle: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+  soldAt: string;
+  buyer: SaleBuyer;
+}

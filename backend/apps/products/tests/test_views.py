@@ -15,6 +15,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 
 from apps.products.models import Product
+from apps.products.models import MAX_UNIT_PRICE
 from apps.products.views import ProductDetailView
 from core.permissions import IsProductOwner
 from core.permissions import IsSeller
@@ -291,6 +292,23 @@ class ProductViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_unit_price_above_maximum_returns_400(self) -> None:
+        self.authenticate(self.seller)
+
+        response = self.client.post(
+            reverse("seller-product-list-create"),
+            {
+                "title": "Headphones",
+                "description": "Noise cancelling",
+                "unit_price": str(MAX_UNIT_PRICE + Decimal("0.01")),
+                "quantity": 8,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Price must be 10,000,000 THB or less.", response.data["message"])
+
     def test_quantity_less_than_zero_returns_400(self) -> None:
         self.authenticate(self.seller)
 
@@ -369,6 +387,20 @@ class ProductViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.product.refresh_from_db()
         self.assertEqual(self.product.title, "Desk lamp pro")
+
+    def test_seller_cannot_update_product_with_price_above_maximum(self) -> None:
+        self.authenticate(self.seller)
+
+        response = self.client.patch(
+            reverse("product-detail", kwargs={"product_id": self.product.id}),
+            {
+                "unit_price": str(MAX_UNIT_PRICE + Decimal("0.01")),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Price must be 10,000,000 THB or less.", response.data["message"])
 
     def test_buyer_cannot_update_product(self) -> None:
         self.authenticate(self.buyer)

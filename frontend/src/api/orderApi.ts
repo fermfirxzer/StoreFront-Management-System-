@@ -1,6 +1,7 @@
 import { apiClient } from "./client";
 import type { ApiSuccessResponse } from "../types/api";
 import type { Order } from "../types/order";
+import type { SellerSale } from "../types/order";
 
 interface OrderItemDto {
   id: string;
@@ -19,6 +20,21 @@ interface OrderDto {
   items: OrderItemDto[];
   created_at: string;
   updated_at: string;
+}
+
+interface SellerSaleDto {
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_title: string;
+  unit_price: string;
+  quantity: number;
+  line_total: string;
+  sold_at: string;
+  buyer: {
+    id: number;
+    email: string;
+  };
 }
 
 function mapOrder(dto: OrderDto): Order {
@@ -40,6 +56,20 @@ function mapOrder(dto: OrderDto): Order {
   };
 }
 
+function mapSellerSale(dto: SellerSaleDto): SellerSale {
+  return {
+    id: dto.id,
+    orderId: dto.order_id,
+    productId: dto.product_id,
+    productTitle: dto.product_title,
+    unitPrice: Number(dto.unit_price),
+    quantity: dto.quantity,
+    lineTotal: Number(dto.line_total),
+    soldAt: dto.sold_at,
+    buyer: dto.buyer,
+  };
+}
+
 export async function checkoutCart(): Promise<Order> {
   const response = await apiClient.post<ApiSuccessResponse<OrderDto>>("/orders/checkout/");
   return mapOrder(response.data.data);
@@ -48,4 +78,9 @@ export async function checkoutCart(): Promise<Order> {
 export async function getOrders(): Promise<Order[]> {
   const response = await apiClient.get<ApiSuccessResponse<OrderDto[]>>("/orders/");
   return response.data.data.map(mapOrder);
+}
+
+export async function getSellerSales(): Promise<SellerSale[]> {
+  const response = await apiClient.get<ApiSuccessResponse<SellerSaleDto[]>>("/orders/sales/");
+  return response.data.data.map(mapSellerSale);
 }

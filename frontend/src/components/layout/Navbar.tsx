@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { logoutRequest } from "../../api/auth";
 import { useAuthStore } from "../../stores/authStore";
 import NavLink from "./NavLink";
 import CartNavButton from "./CartNavButton";
 import UserMenu from "./UserMenu";
+import BrandLogo from "./BrandLogo";
 
 interface NavbarProps {
   containerClass: string;
@@ -42,23 +43,28 @@ export default function Navbar({ containerClass }: NavbarProps) {
           <NavLink key="seller-dashboard" to="/seller/dashboard" onClick={closeMobileMenu}>
             My Products
           </NavLink>,
+          <NavLink key="seller-history" to="/history" onClick={closeMobileMenu}>
+            Sales History
+          </NavLink>,
           <NavLink key="seller-create" to="/seller/products/create" onClick={closeMobileMenu}>
             + Add Product
           </NavLink>,
         ]
+      : role === "BUYER"
+        ? [
+            <NavLink key="buyer-products" to="/products" onClick={closeMobileMenu}>
+              Browse Products
+            </NavLink>,
+            <NavLink key="buyer-history" to="/history" onClick={closeMobileMenu}>
+              Purchase History
+            </NavLink>,
+          ]
       : [];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] shadow-[0_2px_16px_rgba(99,102,241,0.35)] backdrop-blur-sm">
       <div className={`${containerClass} flex h-16 items-center justify-between gap-3`}>
-        <Link className="flex items-center gap-2" to="/">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
-            <ShoppingBag className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-[18px] font-bold tracking-tight text-white">
-            Market<span className="text-white/70">place</span>
-          </span>
-        </Link>
+        <BrandLogo />
 
         <div className="hidden items-center gap-1 md:flex">{navItems}</div>
 

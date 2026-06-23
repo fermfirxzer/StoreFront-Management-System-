@@ -127,6 +127,32 @@ class OrderViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["data"]), 1)
 
+    def test_seller_sales_list_returns_sold_items(self) -> None:
+        order = Order.objects.create(buyer=self.buyer, subtotal=Decimal("49.98"))
+        OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            product_title=self.product.title,
+            unit_price=self.product.unit_price,
+            quantity=2,
+            line_total=Decimal("49.98"),
+        )
+        self.authenticate(self.seller)
+
+        response = self.client.get(reverse("seller-sales-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["data"]), 1)
+        self.assertEqual(response.data["data"][0]["product_title"], "Desk lamp")
+        self.assertEqual(response.data["data"][0]["buyer"]["email"], "buyer@example.com")
+
+    def test_buyer_cannot_access_seller_sales_list(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("seller-sales-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_seller_cannot_checkout(self) -> None:
         self.authenticate(self.seller)
 
