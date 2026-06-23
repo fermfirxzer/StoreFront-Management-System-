@@ -92,7 +92,13 @@ class ProductService:
         return product
 
     def delete_product(self, product: Product) -> None:
+        image_name = product.image.name if product.image else None
+        image_storage = product.image.storage if product.image else None
+
         product.delete()
+
+        if image_name and image_storage:
+            image_storage.delete(image_name)
 
     def get_seller_products(self, seller: User) -> QuerySet[Product]:
         return Product.objects.select_related("seller").filter(seller=seller)
