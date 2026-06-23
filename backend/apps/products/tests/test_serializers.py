@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from apps.products.models import MAX_UNIT_PRICE
 from apps.products.models import Product
+from apps.products.serializers import MAX_PRODUCT_IMAGE_SIZE_BYTES
 from apps.products.serializers import ProductWriteSerializer
 from django.contrib.auth import get_user_model
 
@@ -59,6 +60,31 @@ class ProductWriteSerializerTests(TestCase):
 
         with self.assertRaises(serializers.ValidationError):
             serializer.validate_quantity(-1)
+
+    def test_image_must_not_exceed_two_mb(self) -> None:
+        valid_gif_header = (
+            b"\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00"
+            b"\x00\x00\x00\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00"
+            b"\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b"
+        )
+        image = SimpleUploadedFile(
+            "large.gif",
+            valid_gif_header + (b"x" * MAX_PRODUCT_IMAGE_SIZE_BYTES),
+            content_type="image/gif",
+        )
+        serializer = ProductWriteSerializer(
+            data={
+                "title": "Camera",
+                "description": "Compact",
+                "unit_price": Decimal("100.00"),
+                "quantity": 1,
+                "image": image,
+            }
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("image", serializer.errors)
+        self.assertEqual(str(serializer.errors["image"][0]), "Image must be 2 MB or smaller.")
 
 
 class ProductReadSerializerTests(TestCase):

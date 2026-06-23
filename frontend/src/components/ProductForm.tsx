@@ -342,7 +342,7 @@ export default function ProductForm({
                     Click to upload or drag and drop
                   </p>
                   <p className="text-[13px] leading-6 text-apple-gray">
-                    PNG, JPG, WEBP up to the limits supported by the backend.
+                    PNG, JPG, WEBP up to 2 MB.
                   </p>
                 </div>
               </div>
@@ -366,7 +366,7 @@ export default function ProductForm({
             </p>
             <p className="mt-2 text-[13px] leading-6 text-apple-gray">
               Common image formats are supported. A square or 16:9 image works
-              especially well in the dashboard grid.
+              especially well in the dashboard grid. Maximum image upload: 2 MB.
             </p>
           </div>
 

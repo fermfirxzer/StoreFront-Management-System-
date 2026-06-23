@@ -4,6 +4,7 @@ export const MAX_PRODUCT_PRICE = 10_000_000;
 export const MAX_PRODUCT_QUANTITY = 999_999;
 export const MAX_PRODUCT_TITLE_LENGTH = 75;
 export const MAX_PRODUCT_DESCRIPTION_LENGTH = 200;
+export const MAX_PRODUCT_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 
 export const productSchema = z.object({
   title: z
@@ -26,7 +27,13 @@ export const productSchema = z.object({
     .int("Must be a whole number")
     .min(0, "Must be greater than or equal to 0")
     .max(MAX_PRODUCT_QUANTITY, "Quantity must be 999,999 or less."),
-  image: z.instanceof(File).optional(),
+  image: z
+    .instanceof(File)
+    .refine(
+      (file) => file.size <= MAX_PRODUCT_IMAGE_SIZE_BYTES,
+      "Image must be 2 MB or smaller."
+    )
+    .optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_PRODUCT_DESCRIPTION_LENGTH,
+  MAX_PRODUCT_IMAGE_SIZE_BYTES,
   MAX_PRODUCT_PRICE,
   MAX_PRODUCT_QUANTITY,
   MAX_PRODUCT_TITLE_LENGTH,
@@ -71,6 +72,27 @@ describe("productSchema", () => {
       );
       expect(result.error.flatten().fieldErrors.quantity?.[0]).toBe(
         "Quantity must be 999,999 or less."
+      );
+    }
+  });
+
+  it("rejects product images larger than 2 MB", () => {
+    const image = new File(["x".repeat(MAX_PRODUCT_IMAGE_SIZE_BYTES + 1)], "large.png", {
+      type: "image/png",
+    });
+
+    const result = productSchema.safeParse({
+      title: "Desk lamp",
+      description: "Warm light",
+      unitPrice: 1,
+      quantity: 1,
+      image,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.image?.[0]).toBe(
+        "Image must be 2 MB or smaller."
       );
     }
   });
