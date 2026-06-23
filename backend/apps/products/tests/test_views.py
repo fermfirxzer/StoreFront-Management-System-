@@ -171,6 +171,32 @@ class ProductViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
 
+    def test_marketplace_sorts_by_quantity_ascending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "quantity-asc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Phone stand")
+
+    def test_marketplace_sorts_by_quantity_descending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "quantity-desc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
+    def test_marketplace_sorts_by_latest_update(self) -> None:
+        self.authenticate(self.buyer)
+        self.product.title = "Desk lamp updated"
+        self.product.save(update_fields=["title", "updated_at"])
+
+        response = self.client.get(reverse("product-list"), {"sort": "updated-desc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp updated")
+
     def test_marketplace_response_does_not_expose_private_user_fields(self) -> None:
         self.authenticate(self.buyer)
 

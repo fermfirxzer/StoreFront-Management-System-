@@ -39,10 +39,16 @@ class ProductService:
         if in_stock is False:
             queryset = queryset.filter(quantity=0)
 
-        if sort_by == "price-asc":
-            return queryset.order_by("unit_price", "-created_at")
-        if sort_by == "price-desc":
-            return queryset.order_by("-unit_price", "-created_at")
+        sort_mappings = {
+            "updated-desc": ["-updated_at"],
+            "price-desc": ["-unit_price", "-updated_at"],
+            "price-asc": ["unit_price", "-updated_at"],
+            "quantity-desc": ["-quantity", "-updated_at"],
+            "quantity-asc": ["quantity", "-updated_at"],
+        }
+
+        if sort_by in sort_mappings:
+            return queryset.order_by(*sort_mappings[sort_by])
 
         return queryset.annotate(
             stock_priority=Case(

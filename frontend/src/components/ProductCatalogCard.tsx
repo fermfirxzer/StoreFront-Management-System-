@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import productPlaceholder from "../assets/product-placeholder.svg";
 import type { Product } from "../types/product";
 import AppleButton from "./apple/AppleButton";
@@ -19,11 +19,38 @@ export default function ProductCatalogCard({
   product,
   detailHref,
 }: ProductCatalogCardProps) {
+  const navigate = useNavigate();
+
+  const openDetailPage = () => {
+    navigate(detailHref);
+  };
+
   return (
     <AppleCard
       as="article"
-      className="overflow-hidden border border-[#E0E7FF] p-0 shadow-[0_2px_12px_rgba(99,102,241,0.08)]"
+      className="cursor-pointer overflow-hidden border border-[#E0E7FF] p-0 shadow-[0_2px_12px_rgba(99,102,241,0.08)] hover:border-brand-200"
       interactive
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("a, button")) {
+          return;
+        }
+
+        openDetailPage();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") {
+          return;
+        }
+
+        if ((event.target as HTMLElement).closest("a, button")) {
+          return;
+        }
+
+        event.preventDefault();
+        openDetailPage();
+      }}
+      role="link"
+      tabIndex={0}
     >
       <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
 

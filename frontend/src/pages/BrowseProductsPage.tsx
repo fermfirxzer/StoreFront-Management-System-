@@ -23,13 +23,32 @@ function parseTextParam(value: string | null): string | undefined {
   return value;
 }
 
+function normalizePriceFilterValue(value: string): string {
+  if (value.trim() === "") {
+    return "";
+  }
+
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return value;
+  }
+
+  return String(Math.max(0, numericValue));
+}
+
 function parseSortParam(
   value: string | null
 ): ProductFilters["sortBy"] {
-  if (value === "price-asc" || value === "price-desc" || value === "stock-priority") {
+  if (
+    value === "updated-desc" ||
+    value === "price-desc" ||
+    value === "price-asc" ||
+    value === "quantity-desc" ||
+    value === "quantity-asc"
+  ) {
     return value;
   }
-  return "stock-priority";
+  return "updated-desc";
 }
 
 export default function BrowseProductsPage() {
@@ -79,7 +98,7 @@ export default function BrowseProductsPage() {
     }
 
     if (nextValues.sortBy !== undefined) {
-      if (nextValues.sortBy === "stock-priority") {
+      if (nextValues.sortBy === "updated-desc") {
         nextParams.delete("sort");
       } else {
         nextParams.set("sort", nextValues.sortBy);
@@ -122,8 +141,9 @@ export default function BrowseProductsPage() {
             hint="Thai baht"
             inputMode="decimal"
             label="Min price"
+            min={0}
             onChange={(event) => {
-              updateFilters({ minPrice: event.target.value, page: 1 });
+              updateFilters({ minPrice: normalizePriceFilterValue(event.target.value), page: 1 });
             }}
             placeholder="100"
             prefix="THB"
@@ -135,8 +155,9 @@ export default function BrowseProductsPage() {
             hint="Thai baht"
             inputMode="decimal"
             label="Max price"
+            min={0}
             onChange={(event) => {
-              updateFilters({ maxPrice: event.target.value, page: 1 });
+              updateFilters({ maxPrice: normalizePriceFilterValue(event.target.value), page: 1 });
             }}
             placeholder="1000"
             prefix="THB"
@@ -156,11 +177,13 @@ export default function BrowseProductsPage() {
                   page: 1,
                 });
               }}
-              value={filters.sortBy ?? "stock-priority"}
+              value={filters.sortBy ?? "updated-desc"}
             >
-              <option value="stock-priority">In stock first</option>
-              <option value="price-asc">Price: low to high</option>
+              <option value="updated-desc">Latest update</option>
+              <option value="quantity-desc">Quantity: high to low</option>
+              <option value="quantity-asc">Quantity: low to high</option>
               <option value="price-desc">Price: high to low</option>
+              <option value="price-asc">Price: low to high</option>
             </select>
             <p className="mt-2 text-[12px] text-apple-gray">Choose how products are ordered</p>
           </label>

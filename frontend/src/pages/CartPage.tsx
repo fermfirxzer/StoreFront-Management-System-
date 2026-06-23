@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { removeCartItem, updateCartItemQuantity } from "../api/cartApi";
 import { checkoutCart } from "../api/orderApi";
 import AppleButton from "../components/apple/AppleButton";
@@ -20,6 +20,7 @@ const thaiCurrencyFormatter = new Intl.NumberFormat("th-TH", {
 
 export default function CartPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useCartQuery(true);
   const cart = useCartStore((state) => state.cart);
   const setCart = useCartStore((state) => state.setCart);
@@ -98,6 +99,7 @@ export default function CartPage() {
         updatedAt: new Date().toISOString(),
       } satisfies Cart);
       queryClient.setQueryData<Order[]>(["orders"], (existingOrders = []) => [order, ...existingOrders]);
+      navigate("/history");
     },
   });
 
@@ -237,16 +239,6 @@ export default function CartPage() {
                   <p className="text-[13px] leading-6 text-apple-red">
                     {getApiErrorMessage(checkoutMutation.error, "We could not complete checkout.")}
                   </p>
-                ) : null}
-                {checkoutMutation.isSuccess ? (
-                  <div className="space-y-3">
-                    <p className="text-[13px] leading-6 text-brand-700">
-                      Order created successfully.
-                    </p>
-                    <AppleButton to="/history" variant="ghost">
-                      View history
-                    </AppleButton>
-                  </div>
                 ) : null}
               </div>
             </AppleCard>

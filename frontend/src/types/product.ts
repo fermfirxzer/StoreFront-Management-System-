@@ -21,7 +21,7 @@ export interface ProductFilters {
   search?: string;
   minPrice?: string;
   maxPrice?: string;
-  sortBy?: "stock-priority" | "price-asc" | "price-desc";
+  sortBy?: "updated-desc" | "price-desc" | "price-asc" | "quantity-desc" | "quantity-asc";
 }
 
 export interface SellerProductFilters {

@@ -63,16 +63,58 @@ describe("BrowseProductsPage", () => {
 
     expect(screen.getByText("Desk lamp")).toBeInTheDocument();
     expect(screen.getByText("14 products found")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Latest update")).toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText("Desk lamp"), {
       target: { value: "lamp" },
     });
     fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: "price-desc" },
+      target: { value: "quantity-desc" },
     });
 
     expect(screen.getByDisplayValue("lamp")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Price: high to low")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Quantity: high to low")).toBeInTheDocument();
+  });
+
+  it("opens the product detail page when the product card body is clicked", () => {
+    render(
+      <MemoryRouter initialEntries={["/products?page=1"]}>
+        <Routes>
+          <Route path="/products" element={<BrowseProductsPage />} />
+          <Route path="/products/:productId" element={<p>Product detail opened</p>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText("Warm light"));
+
+    expect(screen.getByText("Product detail opened")).toBeInTheDocument();
+  });
+
+  it("keeps buyer min and max price filters at zero or above", () => {
+    render(
+      <MemoryRouter initialEntries={["/products?page=1"]}>
+        <Routes>
+          <Route path="/products" element={<BrowseProductsPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const minPriceInput = screen.getByPlaceholderText("100");
+    const maxPriceInput = screen.getByPlaceholderText("1000");
+
+    expect(minPriceInput).toHaveAttribute("min", "0");
+    expect(maxPriceInput).toHaveAttribute("min", "0");
+
+    fireEvent.change(minPriceInput, {
+      target: { value: "-10" },
+    });
+    fireEvent.change(maxPriceInput, {
+      target: { value: "-20" },
+    });
+
+    expect(screen.getByPlaceholderText("100")).toHaveValue(0);
+    expect(screen.getByPlaceholderText("1000")).toHaveValue(0);
   });
 
   it("shows loading and empty states", () => {
