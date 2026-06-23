@@ -21,7 +21,7 @@ export default function AuthBootstrap() {
         const session = await refreshRequest();
         if (!cancelled) {
           setSession({
-            accessToken: session.access,
+            accessToken: session.tokens.access,
             user: session.user,
           });
         }
@@ -47,4 +47,3 @@ export default function AuthBootstrap() {
 
   return null;
 }
-

@@ -16,4 +16,5 @@ PASSWORD_HASHERS = [
 ]
 
 DEBUG = False
-
+ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1"]
+MEDIA_ROOT = BASE_DIR / "test_media"

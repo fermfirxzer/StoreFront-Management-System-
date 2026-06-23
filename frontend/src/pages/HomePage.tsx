@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { logoutRequest } from "../api/auth";
 import { useAuthStore } from "../stores/authStore";
+import AppleButton from "../components/apple/AppleButton";
+import AppleCard from "../components/apple/AppleCard";
 
 export default function HomePage() {
   const user = useAuthStore((state) => state.user);
+  const role = useAuthStore((state) => state.role);
   const clearSession = useAuthStore((state) => state.clearSession);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const displayName = user?.username?.trim() || user?.email || "";
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -18,35 +22,37 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] text-slate-900">
-      <section className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
-        <div className="w-full rounded-[2rem] bg-white p-10 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80">
-          <p className="text-sm font-medium uppercase tracking-[0.28em] text-blue-600">
-            Authenticated
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight">
-            Welcome{user ? `, ${user.email}` : ""}.
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
-            Your access token lives in memory, while the refresh token stays in
-            an HttpOnly cookie. A page refresh can restore your session securely.
-          </p>
+    <section className="animate-fade-in">
+      <AppleCard className="w-full border-t-4 border-t-brand-500 p-6 shadow-[0_20px_60px_rgba(99,102,241,0.12)] sm:p-8 lg:p-10">
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
+          Authenticated
+        </p>
+        <h1 className="mt-4 text-[32px] font-bold tracking-[-0.04em] text-brand-900 sm:text-[40px]">
+          Welcome{user ? `, ${displayName}` : ""}.
+        </h1>
+        <p className="mt-4 max-w-2xl text-[17px] leading-7 text-apple-gray">
+          Your marketplace session stays secure in the background, so you can refresh the
+          page and pick up right where you left off.
+        </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
-              Role: {user?.role ?? "Unknown"}
-            </span>
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoggingOut ? "Logging out..." : "Logout"}
-            </button>
-          </div>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <span className="inline-flex w-fit rounded-apple-pill border border-brand-200 bg-brand-50 px-4 py-2 text-[15px] font-semibold text-brand-700">
+            Role: {user?.role ?? "Unknown"}
+          </span>
+          {role === "SELLER" ? (
+            <AppleButton to="/seller/dashboard" variant="primary">
+              Open seller dashboard
+            </AppleButton>
+          ) : (
+            <AppleButton to="/products" variant="primary">
+              Browse products
+            </AppleButton>
+          )}
+          <AppleButton loading={isLoggingOut} onClick={handleLogout} variant="secondary">
+            Logout
+          </AppleButton>
         </div>
-      </section>
-    </main>
+      </AppleCard>
+    </section>
   );
 }

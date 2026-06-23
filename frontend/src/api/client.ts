@@ -14,6 +14,13 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  if (config.data instanceof FormData && config.headers) {
+    delete config.headers["Content-Type"];
+  } else if (config.headers && !config.headers["Content-Type"]) {
+    config.headers["Content-Type"] = "application/json";
+  }
+
   return config;
 });
 
@@ -35,11 +42,11 @@ apiClient.interceptors.response.use(
 
     try {
       const nextSession = await refreshRequest();
-      updateTokens({ accessToken: nextSession.access });
+      updateTokens({ accessToken: nextSession.tokens.access });
       setUser(nextSession.user);
 
       if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${nextSession.access}`;
+        originalRequest.headers.Authorization = `Bearer ${nextSession.tokens.access}`;
       }
 
       return apiClient(originalRequest);

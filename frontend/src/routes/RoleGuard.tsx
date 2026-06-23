@@ -10,14 +10,14 @@ export default function RoleGuard({ allowedRole }: RoleGuardProps) {
   const role = useAuthStore((state) => state.role);
   const isBootstrapping = useAuthStore((state) => state.isBootstrapping);
   const isAuthenticated = useAuthStore(
-    (state) => state.accessToken !== null && state.user !== null
+    (state) => Boolean(state.accessToken) && state.user !== null
   );
 
   if (isBootstrapping) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white text-slate-600">
+      <div className="flex min-h-[50vh] items-center justify-center text-slate-600">
         Restoring your session...
-      </main>
+      </div>
     );
   }
 
