@@ -39,7 +39,7 @@ function getVariantClasses(variant: Variant) {
 
 function baseClasses({ fullWidth, loading, variant }: { fullWidth?: boolean; loading?: boolean; variant: Variant }) {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-apple-pill px-6 py-3 text-[15px] font-semibold tracking-[-0.01em] outline-none transition-all duration-200 ease-apple active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-card disabled:pointer-events-none disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-apple-pill px-6 py-3 text-[15px] font-semibold tracking-[-0.01em] outline-none transition-all duration-200 ease-apple active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-card disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100",
     getVariantClasses(variant),
     variant === "primary" ? "shadow-[0_4px_14px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.5)] hover:scale-[1.02]" : "",
     fullWidth ? "w-full" : "",

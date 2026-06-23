@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, Minus, Plus } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { addCartItem } from "../api/cartApi";
@@ -26,11 +26,25 @@ export default function ProductDetailPage() {
   const setCart = useCartStore((state) => state.setCart);
   const optimisticAddItem = useCartStore((state) => state.optimisticAddItem);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
   const { data: product, isLoading, error } = useProductDetailQuery(productId);
   const backTarget = location.search ? `/products${location.search}` : "/products";
+
+  useEffect(() => {
+    setSelectedQuantity(1);
+  }, [product?.id]);
+
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+
+    setSelectedQuantity((quantity) => Math.min(Math.max(1, quantity), Math.max(1, product.quantity)));
+  }, [product?.quantity, product]);
+
   const addToCartMutation = useMutation({
-    mutationFn: () => addCartItem({ productId, quantity: 1 }),
-    onMutate: async () => {
+    mutationFn: (quantity: number) => addCartItem({ productId, quantity }),
+    onMutate: async (quantity) => {
       if (!product) {
         return { previousCart: useCartStore.getState().cart, previousQueryCart: undefined as Cart | undefined };
       }
@@ -46,7 +60,7 @@ export default function ProductDetailPage() {
           image: product.image,
           availableQuantity: product.quantity,
         },
-        quantity: 1,
+        quantity,
       });
       return { previousCart, previousQueryCart };
     },
@@ -75,7 +89,11 @@ export default function ProductDetailPage() {
       {isLoading ? (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
           <AppleCard className="overflow-hidden p-0">
-            <div className="aspect-[4/3] apple-skeleton animate-shimmer" />
+            <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
+            <div className="p-5 sm:p-6">
+              <div className="h-[360px] rounded-apple-card apple-skeleton animate-shimmer sm:h-[440px] lg:h-[520px]" />
+              <div className="mt-6 h-24 rounded-apple-card apple-skeleton animate-shimmer" />
+            </div>
           </AppleCard>
           <AppleCard className="space-y-4">
             <div className="h-4 w-24 rounded-full apple-skeleton animate-shimmer" />
@@ -98,12 +116,35 @@ export default function ProductDetailPage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
           <AppleCard className="overflow-hidden p-0">
             <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
-            <div className="aspect-[4/3] bg-[#EEF2FF]">
-              <img
-                alt={product.image ? product.title : `${product.title} placeholder`}
-                className="h-full w-full object-cover"
-                src={product.image ?? productPlaceholder}
-              />
+            <div className="p-5 sm:p-6">
+              <div className="flex h-[360px] w-full items-center justify-center overflow-hidden rounded-apple-card bg-[#EEF2FF] p-8 sm:h-[440px] sm:p-10 lg:h-[520px]">
+                <img
+                  alt={product.image ? product.title : `${product.title} placeholder`}
+                  className="max-h-[280px] w-auto max-w-full object-contain object-center sm:max-h-[360px] lg:max-h-[420px]"
+                  src={product.image ?? productPlaceholder}
+                />
+              </div>
+
+              <div className="mt-6 rounded-apple-card bg-[#F8FAFF] p-4">
+                <div className="grid gap-4 text-[13px] sm:grid-cols-2">
+                  <div>
+                    <p className="font-medium uppercase tracking-[0.2px] text-apple-gray">
+                      Stock
+                    </p>
+                    <p className="mt-1 font-semibold text-brand-900">
+                      {product.quantity > 0 ? `${product.quantity} available` : "Out of stock"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium uppercase tracking-[0.2px] text-apple-gray">
+                      Updated
+                    </p>
+                    <p className="mt-1 font-semibold text-brand-900">
+                      {new Date(product.updatedAt).toLocaleDateString("en-GB")}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </AppleCard>
 
@@ -168,27 +209,70 @@ export default function ProductDetailPage() {
               <p className="mt-6 text-[13px] leading-6 text-brand-700">{cartMessage}</p>
             ) : null}
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 space-y-3">
               {role === "BUYER" ? (
-                <AppleButton
-                  disabled={product.quantity <= 0}
-                  loading={addToCartMutation.isPending}
-                  onClick={() => {
-                    void addToCartMutation.mutateAsync();
-                  }}
-                  variant="primary"
-                >
-                  Add to cart
-                </AppleButton>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-apple-card bg-[#F8FAFF] p-4">
+                    <div>
+                      <p className="text-[12px] font-medium uppercase tracking-[0.2px] text-apple-gray">
+                        Quantity
+                      </p>
+                      <p className="mt-1 text-[13px] text-apple-gray">
+                        Choose how many to add
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-apple-pill bg-white p-1 shadow-[0_2px_10px_rgba(99,102,241,0.08)]">
+                      <button
+                        aria-label="Decrease quantity"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-apple-gray transition hover:bg-[#EEF2FF] hover:text-brand-900 disabled:cursor-not-allowed disabled:text-[#B3B3BD]"
+                        disabled={selectedQuantity <= 1 || addToCartMutation.isPending}
+                        onClick={() => {
+                          setSelectedQuantity((quantity) => Math.max(1, quantity - 1));
+                        }}
+                        type="button"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="min-w-8 text-center text-[15px] font-semibold text-brand-900">
+                        {selectedQuantity}
+                      </span>
+                      <button
+                        aria-label="Increase quantity"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-apple-gray transition hover:bg-[#EEF2FF] hover:text-brand-900 disabled:cursor-not-allowed disabled:text-[#B3B3BD]"
+                        disabled={selectedQuantity >= product.quantity || addToCartMutation.isPending}
+                        onClick={() => {
+                          setSelectedQuantity((quantity) => Math.min(product.quantity, quantity + 1));
+                        }}
+                        type="button"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <AppleButton
+                      disabled={product.quantity <= 0}
+                      loading={addToCartMutation.isPending}
+                      onClick={() => {
+                        void addToCartMutation.mutateAsync(selectedQuantity);
+                      }}
+                      variant="primary"
+                    >
+                      Add to cart
+                    </AppleButton>
+                    <AppleButton to="/cart" variant="secondary">
+                      View cart
+                    </AppleButton>
+                  </div>
+                </div>
               ) : null}
-              {role === "BUYER" ? (
-                <AppleButton to="/cart" variant="secondary">
-                  View cart
+              <div className="flex justify-end">
+                <AppleButton to={backTarget} variant="ghost">
+                  Back to catalog
+                  <ArrowRight className="h-4 w-4" />
                 </AppleButton>
-              ) : null}
-              <AppleButton to={backTarget} variant="ghost">
-                Back to catalog
-              </AppleButton>
+              </div>
             </div>
           </AppleCard>
         </div>
