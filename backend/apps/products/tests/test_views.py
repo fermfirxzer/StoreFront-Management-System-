@@ -11,9 +11,12 @@ from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 
 from apps.products.models import Product
+from apps.products.views import ProductDetailView
+from core.permissions import IsProductOwner
 
 User = get_user_model()
 
@@ -198,3 +201,23 @@ class ProductViewTests(APITestCase):
             reverse("product-detail", kwargs={"product_id": self.product.id})
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_seller_can_retrieve_product_detail(self) -> None:
+        self.authenticate(self.seller)
+        response = self.client.get(
+            reverse("product-detail", kwargs={"product_id": self.product.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["id"], str(self.product.id))
+
+    def test_get_permissions_adds_owner_check_for_mutating_methods(self) -> None:
+        factory = APIRequestFactory()
+        request = factory.put(
+            reverse("product-detail", kwargs={"product_id": self.product.id})
+        )
+        view = ProductDetailView()
+        view.request = request
+
+        permissions = view.get_permissions()
+
+        self.assertTrue(any(isinstance(permission, IsProductOwner) for permission in permissions))

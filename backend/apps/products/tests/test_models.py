@@ -38,3 +38,14 @@ class ProductModelTests(TestCase):
                 unit_price=Decimal("10.00"),
                 quantity=-1,
             )
+
+    def test_str_returns_title(self) -> None:
+        product = Product.objects.create(
+            seller=self.seller,
+            title="Desk lamp",
+            description="Warm light",
+            unit_price=Decimal("24.99"),
+            quantity=5,
+        )
+
+        self.assertEqual(str(product), "Desk lamp")

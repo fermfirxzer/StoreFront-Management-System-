@@ -31,8 +31,8 @@ export default function HomePage() {
           Welcome{user ? `, ${displayName}` : ""}.
         </h1>
         <p className="mt-4 max-w-2xl text-[17px] leading-7 text-apple-gray">
-          Your access token lives in memory, while the refresh token stays in an HttpOnly
-          cookie. A page refresh can restore your session securely.
+          Your marketplace session stays secure in the background, so you can refresh the
+          page and pick up right where you left off.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">

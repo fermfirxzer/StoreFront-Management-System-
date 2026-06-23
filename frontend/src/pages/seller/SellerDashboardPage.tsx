@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { deleteProduct, getSellerProducts } from "../../api/productApi";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { useAuthStore } from "../../stores/authStore";
@@ -248,17 +250,15 @@ export default function SellerDashboardPage() {
                       Updated {new Date(product.updatedAt).toLocaleDateString("en-GB")}
                     </p>
 
-                    <div className="mt-4 flex gap-2 px-0 pb-0">
-                      <AppleButton
-                        fullWidth
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <Link
+                        className="inline-flex h-11 items-center justify-center rounded-2xl bg-violet-50 px-5 text-sm font-semibold text-violet-700 transition hover:bg-violet-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-100"
                         to={`/seller/products/${product.id}/edit`}
-                        variant="secondary"
-                        className="px-4 py-2 text-[13px]"
                       >
                         Edit
-                      </AppleButton>
-                      <AppleButton
-                        fullWidth
+                      </Link>
+                      <button
+                        type="button"
                         onClick={() => {
                           deleteMutation.reset();
                           setPendingDeleteProduct({
@@ -266,11 +266,10 @@ export default function SellerDashboardPage() {
                             title: product.title,
                           });
                         }}
-                        variant="destructive"
-                        className="px-4 py-2 text-[13px]"
+                        className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-100 px-5 text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
                       >
                         Delete
-                      </AppleButton>
+                      </button>
                     </div>
                   </div>
                 </AppleCard>
@@ -318,98 +317,80 @@ export default function SellerDashboardPage() {
 
       {pendingDeleteProduct ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]/45 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-sm"
           onClick={() => {
             deleteMutation.reset();
             setPendingDeleteProduct(null);
           }}
         >
-          <AppleCard
+          <div
             aria-describedby="delete-product-description"
             aria-labelledby="delete-product-title"
             aria-modal="true"
-            className="w-full max-w-[440px] overflow-hidden border border-[#E0E7FF] bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+            className="w-full max-w-[480px] rounded-[28px] bg-white p-8 shadow-2xl shadow-slate-900/20 ring-1 ring-brand-100 sm:p-10"
             onClick={(event) => {
               event.stopPropagation();
             }}
             role="dialog"
           >
-            <div className="h-1 w-full bg-gradient-to-r from-brand-500 via-[#FF5A52] to-[#FF3B30]" />
-            <div className="px-5 pb-5 pt-5 sm:px-8 sm:pb-8 sm:pt-7">
-              <div className="mb-4 flex items-start gap-3 sm:gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FEE2E2] text-[#D92D20] sm:h-12 sm:w-12">
-                  <svg
-                    aria-hidden="true"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5 sm:h-6 sm:w-6"
-                  >
-                    <path
-                      d="M12 9v4m0 4h.01M10.3 4.1l-7.1 12.2A2 2 0 0 0 4.9 19h14.2a2 2 0 0 0 1.7-2.7L13.7 4.1a2 2 0 0 0-3.4 0Z"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.8"
-                    />
-                  </svg>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#D92D20]">
-                    Confirm deletion
-                  </p>
-                  <h2
-                    className="text-[22px] font-bold tracking-[-0.03em] leading-tight text-[#1E1B4B] sm:text-[24px]"
-                    id="delete-product-title"
-                  >
-                    Delete this product?
-                  </h2>
-                </div>
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500">
+                <AlertTriangle aria-hidden="true" className="h-5 w-5" />
               </div>
-
-              <p
-                className="text-[15px] leading-7 text-[#6E6E73]"
-                id="delete-product-description"
-              >
-                This will permanently remove{" "}
-                <span className="font-semibold text-[#1E1B4B]">
-                  {pendingDeleteProduct.title}
-                </span>{" "}
-                from your seller dashboard. This action cannot be undone.
-              </p>
-
-              {deleteMutation.isError ? (
-                <p className="mt-4 rounded-[14px] border border-[#FECACA] bg-[#FFF1F1] px-4 py-3 text-[13px] leading-6 text-apple-red">
-                  We could not delete that product. Please try again.
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-500">
+                  Confirm Deletion
                 </p>
-              ) : null}
-
-              <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <AppleButton
-                  fullWidth
-                  variant="ghost"
-                  onClick={() => {
-                    deleteMutation.reset();
-                    setPendingDeleteProduct(null);
-                  }}
-                  className="h-12 bg-[#F5F5F7] px-6 text-[15px] text-[#1E1B4B] hover:bg-[#E8E8ED] focus-visible:ring-brand-500 sm:w-[132px]"
+                <h2
+                  className="mt-2 text-2xl font-bold tracking-tight text-slate-950"
+                  id="delete-product-title"
                 >
-                  Cancel
-                </AppleButton>
-                <AppleButton
-                  fullWidth
-                  loading={deleteMutation.isPending && deletingId === pendingDeleteProduct.id}
-                  onClick={() => {
-                    setDeletingId(pendingDeleteProduct.id);
-                    void deleteMutation.mutateAsync(pendingDeleteProduct.id);
-                  }}
-                  variant="destructive"
-                  className="h-12 px-6 text-[15px] font-semibold text-white shadow-[0_4px_14px_rgba(255,59,48,0.34)] hover:shadow-[0_6px_20px_rgba(255,59,48,0.44)] focus-visible:ring-[#FF3B30] sm:w-[132px]"
-                >
-                  Delete
-                </AppleButton>
+                  Delete this product?
+                </h2>
               </div>
             </div>
-          </AppleCard>
+
+            <p
+              className="mt-5 text-sm leading-7 text-slate-600"
+              id="delete-product-description"
+            >
+              This will permanently remove{" "}
+              <span className="font-semibold text-slate-900">
+                {pendingDeleteProduct.title}
+              </span>{" "}
+              from your seller dashboard. This action cannot be undone.
+            </p>
+
+            {deleteMutation.isError ? (
+              <p className="mt-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-600">
+                We could not delete that product. Please try again.
+              </p>
+            ) : null}
+
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  deleteMutation.reset();
+                  setPendingDeleteProduct(null);
+                }}
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteMutation.isPending && deletingId === pendingDeleteProduct.id}
+                onClick={() => {
+                  setDeletingId(pendingDeleteProduct.id);
+                  void deleteMutation.mutateAsync(pendingDeleteProduct.id);
+                }}
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-red-500 px-4 text-sm font-semibold text-white shadow-lg shadow-red-500/25 transition hover:bg-red-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-100 disabled:cursor-progress disabled:opacity-70"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </>

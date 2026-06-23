@@ -5,6 +5,8 @@ from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase, APIRequestFactory
+from rest_framework_simplejwt.exceptions import TokenError
+from unittest.mock import patch
 
 from apps.accounts.views import MeAPIView
 from core.permissions import IsSeller
@@ -77,6 +79,28 @@ class AuthenticationTests(APITestCase):
         self.assertNotIn("refresh", response.data["data"]["tokens"])
         self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, response.cookies)
 
+    def test_login_rejects_disabled_user(self) -> None:
+        user = User.objects.create_user(
+            email="disabled@example.com",
+            password="StrongPass123!",
+            role="BUYER",
+        )
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+
+        with patch("apps.accounts.serializers.authenticate_user", return_value=user):
+            response = self.client.post(
+                reverse("login"),
+                {
+                    "email": user.email,
+                    "password": "StrongPass123!",
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"], "This account is disabled.")
+
     def test_refresh_returns_new_access_token(self) -> None:
         user = User.objects.create_user(
             email="refresh@example.com",
@@ -109,6 +133,45 @@ class AuthenticationTests(APITestCase):
         self.assertIn("access", response.data["data"]["tokens"])
         self.assertIn("user", response.data["data"])
         self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, response.cookies)
+
+    def test_refresh_returns_401_when_session_cookie_is_missing(self) -> None:
+        response = self.client.post(
+            reverse("refresh"),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data["message"], "Refresh session is missing.")
+
+    def test_refresh_returns_401_when_token_serializer_fails(self) -> None:
+        user = User.objects.create_user(
+            email="serializer-failure@example.com",
+            password="StrongPass123!",
+            role="BUYER",
+        )
+        login_response = self.client.post(
+            reverse("login"),
+            {
+                "email": user.email,
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME] = login_response.cookies[
+            settings.REFRESH_TOKEN_COOKIE_NAME
+        ].value
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME][
+            "path"
+        ] = settings.REFRESH_TOKEN_COOKIE_PATH
+
+        with patch("apps.accounts.views.SimpleJWTTokenRefreshSerializer.is_valid", side_effect=TokenError("Token is invalid or expired")):
+            response = self.client.post(
+                reverse("refresh"),
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data["message"], "Token is invalid or expired")
 
     def test_failed_refresh_does_not_clear_cookie_after_rotation_race(self) -> None:
         user = User.objects.create_user(
@@ -149,6 +212,22 @@ class AuthenticationTests(APITestCase):
 
         self.assertEqual(stale_refresh_response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertNotIn(settings.REFRESH_TOKEN_COOKIE_NAME, stale_refresh_response.cookies)
+
+    def test_logout_ignores_invalid_refresh_token_and_clears_cookie(self) -> None:
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME] = "not-a-valid-refresh-token"
+        self.client.cookies[settings.REFRESH_TOKEN_COOKIE_NAME][
+            "path"
+        ] = settings.REFRESH_TOKEN_COOKIE_PATH
+
+        response = self.client.post(
+            reverse("logout"),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "success")
+        self.assertIn(settings.REFRESH_TOKEN_COOKIE_NAME, response.cookies)
+        self.assertEqual(response.cookies[settings.REFRESH_TOKEN_COOKIE_NAME]["max-age"], 0)
 
     def test_me_returns_authenticated_user(self) -> None:
         user = User.objects.create_user(
