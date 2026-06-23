@@ -10,8 +10,9 @@ from pathlib import Path
 
 def main() -> None:
     deps_dir = Path(__file__).resolve().parent / ".deps"
-    if deps_dir.exists():
-        sys.path.insert(0, str(deps_dir))
+    if deps_dir.exists() and str(deps_dir) not in sys.path:
+        # Keep vendored dependencies as a fallback without shadowing installed packages.
+        sys.path.append(str(deps_dir))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
     try:
         from django.core.management import execute_from_command_line

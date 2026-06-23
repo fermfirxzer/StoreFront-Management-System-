@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
-import { deleteProduct, getSellerProducts } from "../../api/productApi";
-import { getApiErrorMessage } from "../../utils/apiErrors";
-import { useAuthStore } from "../../stores/authStore";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Search } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteProduct } from "../../api/productApi";
 import AppleButton from "../../components/apple/AppleButton";
 import AppleCard from "../../components/apple/AppleCard";
+import AppleInput from "../../components/apple/AppleInput";
+import PaginationControls from "../../components/PaginationControls";
+import { useSellerProductsQuery } from "../../hooks/useProductQueries";
+import { useAuthStore } from "../../stores/authStore";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 
 type SortOption = "updated-desc" | "price-desc" | "price-asc" | "quantity-desc" | "quantity-asc";
 
@@ -16,9 +19,24 @@ const thaiCurrencyFormatter = new Intl.NumberFormat("th-TH", {
   maximumFractionDigits: 2,
 });
 
+const defaultPageSize = 12;
+
+function parsePageParam(value: string | null): number {
+  const parsedValue = Number(value ?? "1");
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 1;
+}
+
+function parseSearchParam(value: string | null): string | undefined {
+  if (value === null || value.trim() === "") {
+    return undefined;
+  }
+  return value;
+}
+
 export default function SellerDashboardPage() {
   const queryClient = useQueryClient();
   const clearSession = useAuthStore((state) => state.clearSession);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState<SortOption>("updated-desc");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteProduct, setPendingDeleteProduct] = useState<{
@@ -26,10 +44,16 @@ export default function SellerDashboardPage() {
     title: string;
   } | null>(null);
 
-  const { data: products, isLoading, error } = useQuery({
-    queryKey: ["seller-products"],
-    queryFn: getSellerProducts,
-  });
+  const filters = useMemo(
+    () => ({
+      page: parsePageParam(searchParams.get("page")),
+      pageSize: defaultPageSize,
+      search: parseSearchParam(searchParams.get("search")),
+    }),
+    [searchParams]
+  );
+
+  const { data, isLoading, isFetching, error } = useSellerProductsQuery(filters);
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -43,7 +67,7 @@ export default function SellerDashboardPage() {
     },
   });
 
-  const sortedProducts = [...(products ?? [])].sort((left, right) => {
+  const sortedProducts = [...(data?.results ?? [])].sort((left, right) => {
     switch (sortBy) {
       case "price-desc":
         return right.unitPrice - left.unitPrice;
@@ -55,11 +79,30 @@ export default function SellerDashboardPage() {
         return left.quantity - right.quantity;
       case "updated-desc":
       default:
-        return (
-          new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
-      );
+        return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
     }
   });
+
+  const totalPages = Math.max(1, Math.ceil((data?.count ?? 0) / defaultPageSize));
+
+  const updateFilters = (nextValues: { page?: number; search?: string }) => {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (nextValues.page !== undefined) {
+      nextParams.set("page", String(nextValues.page));
+    }
+
+    if (nextValues.search !== undefined) {
+      if (nextValues.search.trim() === "") {
+        nextParams.delete("search");
+      } else {
+        nextParams.set("search", nextValues.search);
+      }
+      nextParams.set("page", "1");
+    }
+
+    setSearchParams(nextParams);
+  };
 
   useEffect(() => {
     if (!pendingDeleteProduct) {
@@ -92,11 +135,11 @@ export default function SellerDashboardPage() {
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
                 Seller dashboard
               </p>
-              <h1 className="text-[32px] font-bold tracking-[-0.04em] leading-tight text-brand-900 sm:text-[40px]">
+              <h1 className="text-[32px] font-bold leading-tight tracking-[-0.04em] text-brand-900 sm:text-[40px]">
                 My Products
               </h1>
               <p className="text-[15px] text-apple-gray">
-                {sortedProducts.length} products listed
+                {data?.count ?? 0} products listed
               </p>
             </div>
           </div>
@@ -110,30 +153,46 @@ export default function SellerDashboardPage() {
           </AppleButton>
         </div>
 
-        <AppleCard className="mt-8 flex flex-col gap-4 border-l-4 border-brand-500 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-[15px] font-semibold text-brand-900">Sort catalog</p>
-            <p className="mt-0.5 text-[12px] text-apple-gray">
-              Review products by recency, price, or quantity.
-            </p>
+        <AppleCard className="mt-8 grid gap-4 border-l-4 border-brand-500 lg:grid-cols-[minmax(0,1.3fr)_auto] lg:items-end">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-[42px] h-4 w-4 text-[#A5B4FC]" />
+              <AppleInput
+                containerClassName="h-full"
+                fieldClassName="pl-11"
+                hint="Search your product titles"
+                label="Search"
+                onChange={(event) => {
+                  updateFilters({ search: event.target.value });
+                }}
+                placeholder="Desk lamp"
+                value={filters.search ?? ""}
+              />
+            </div>
+
+            <label className="flex items-center gap-3 text-[13px] font-medium text-apple-black">
+              <span>Sort by</span>
+              <select
+                className="cursor-pointer rounded-[12px] border border-brand-200 bg-surface-input px-3 py-2 text-[13px] font-medium text-brand-700 outline-none transition-all duration-150 ease-apple focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"
+                onChange={(event) => {
+                  setSortBy(event.target.value as SortOption);
+                }}
+                value={sortBy}
+              >
+                <option value="updated-desc">Latest update</option>
+                <option value="quantity-desc">Quantity: high to low</option>
+                <option value="quantity-asc">Quantity: low to high</option>
+                <option value="price-desc">Price: high to low</option>
+                <option value="price-asc">Price: low to high</option>
+              </select>
+            </label>
           </div>
 
-          <label className="flex items-center gap-3 text-[13px] font-medium text-apple-black">
-            <span>Sort by</span>
-            <select
-              className="cursor-pointer rounded-[12px] border border-brand-200 bg-surface-input px-3 py-2 text-[13px] font-medium text-brand-700 outline-none transition-all duration-150 ease-apple focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"
-              onChange={(event) => {
-                setSortBy(event.target.value as SortOption);
-              }}
-              value={sortBy}
-            >
-              <option value="updated-desc">Latest update</option>
-              <option value="quantity-desc">Quantity: high to low</option>
-              <option value="quantity-asc">Quantity: low to high</option>
-              <option value="price-desc">Price: high to low</option>
-              <option value="price-asc">Price: low to high</option>
-            </select>
-          </label>
+          {isFetching && !isLoading ? (
+            <span className="text-[13px] font-medium uppercase tracking-[0.2px] text-brand-600">
+              Updating results...
+            </span>
+          ) : null}
         </AppleCard>
 
         {isLoading ? (
@@ -141,7 +200,7 @@ export default function SellerDashboardPage() {
             {Array.from({ length: 6 }).map((_, index) => (
               <AppleCard key={index} className="space-y-4 overflow-hidden p-0" interactive>
                 <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
-                <div className="px-6 pb-6 pt-5 space-y-4">
+                <div className="space-y-4 px-6 pb-6 pt-5">
                   <div className="aspect-[16/9] rounded-apple-input apple-skeleton animate-shimmer" />
                   <div className="space-y-3">
                     <div className="h-5 w-3/4 rounded-full apple-skeleton animate-shimmer" />
@@ -156,7 +215,7 @@ export default function SellerDashboardPage() {
 
         {error ? (
           <AppleCard className="mt-8 border border-apple-red/20 bg-[#fff5f5] text-apple-red">
-            <p className="text-[13px] leading-6 animate-shake">
+            <p className="animate-shake text-[13px] leading-6">
               {getApiErrorMessage(error, "We could not load your products.")}
             </p>
             <div className="mt-4">
@@ -173,9 +232,9 @@ export default function SellerDashboardPage() {
         ) : null}
 
         {!isLoading && !error && sortedProducts.length > 0 ? (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {sortedProducts.map((product) => {
-              return (
+          <>
+            <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {sortedProducts.map((product) => (
                 <AppleCard
                   as="article"
                   className="overflow-hidden border border-[#E0E7FF] p-0 shadow-[0_2px_12px_rgba(99,102,241,0.08)] hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(99,102,241,0.15)]"
@@ -217,10 +276,10 @@ export default function SellerDashboardPage() {
 
                   <div className="space-y-4 px-4 pb-4 pt-4">
                     <div>
-                      <h2 className="text-[15px] font-semibold tracking-[-0.01em] leading-snug text-brand-900">
+                      <h2 className="text-[15px] font-semibold leading-snug tracking-[-0.01em] text-brand-900">
                         {product.title}
                       </h2>
-                      <p className="mt-1 text-[13px] leading-6 text-apple-gray line-clamp-2">
+                      <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-apple-gray">
                         {product.description || "No description added yet."}
                       </p>
                     </div>
@@ -273,9 +332,18 @@ export default function SellerDashboardPage() {
                     </div>
                   </div>
                 </AppleCard>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+
+            <PaginationControls
+              currentPage={filters.page}
+              isPending={isFetching}
+              onPageChange={(page) => {
+                updateFilters({ page });
+              }}
+              totalPages={totalPages}
+            />
+          </>
         ) : null}
 
         {!isLoading && !error && sortedProducts.length === 0 ? (
@@ -297,10 +365,12 @@ export default function SellerDashboardPage() {
               </svg>
             </div>
             <h2 className="mt-6 text-[24px] font-semibold tracking-[-0.03em] text-brand-900">
-              No products yet
+              {filters.search ? "No products match this search" : "No products yet"}
             </h2>
             <p className="mt-3 max-w-md text-[17px] leading-7 text-apple-gray">
-              Start by adding your first product.
+              {filters.search
+                ? "Try a different product title or clear the search."
+                : "Start by adding your first product."}
             </p>
             <div className="mt-8">
               <AppleButton

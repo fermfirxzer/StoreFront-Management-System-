@@ -15,6 +15,21 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface ProductFilters {
+  page: number;
+  pageSize?: number;
+  search?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  inStock?: boolean | null;
+}
+
+export interface SellerProductFilters {
+  page: number;
+  pageSize?: number;
+  search?: string;
+}
+
 export interface CreateProductPayload {
   title: string;
   description?: string;

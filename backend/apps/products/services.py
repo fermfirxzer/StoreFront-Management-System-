@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from uuid import UUID
 
 from django.core.exceptions import PermissionDenied
 from django.db.models import QuerySet
-from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound
 
 from apps.accounts.models import User
@@ -13,6 +13,29 @@ from .models import Product
 
 
 class ProductService:
+    def get_marketplace_products(
+        self,
+        *,
+        search: str | None = None,
+        min_price: Decimal | None = None,
+        max_price: Decimal | None = None,
+        in_stock: bool | None = None,
+    ) -> QuerySet[Product]:
+        queryset = Product.objects.select_related("seller").all()
+
+        if search:
+            queryset = queryset.filter(title__icontains=search)
+        if min_price is not None:
+            queryset = queryset.filter(unit_price__gte=min_price)
+        if max_price is not None:
+            queryset = queryset.filter(unit_price__lte=max_price)
+        if in_stock is True:
+            queryset = queryset.filter(quantity__gt=0)
+        if in_stock is False:
+            queryset = queryset.filter(quantity=0)
+
+        return queryset
+
     def create_product(
         self,
         seller: User,
@@ -51,6 +74,19 @@ class ProductService:
 
     def get_seller_products(self, seller: User) -> QuerySet[Product]:
         return Product.objects.select_related("seller").filter(seller=seller)
+
+    def get_paginated_seller_products(
+        self,
+        *,
+        seller: User,
+        search: str | None = None,
+    ) -> QuerySet[Product]:
+        queryset = self.get_seller_products(seller)
+
+        if search:
+            queryset = queryset.filter(title__icontains=search)
+
+        return queryset
 
     def get_product_by_id(self, product_id: UUID) -> Product:
         try:

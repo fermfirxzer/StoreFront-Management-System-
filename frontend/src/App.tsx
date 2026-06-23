@@ -6,6 +6,7 @@ import CartPage from "./pages/CartPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import OrdersPage from "./pages/OrdersPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import RegisterPage from "./pages/RegisterPage";
 import CreateProductPage from "./pages/seller/CreateProductPage";
 import EditProductPage from "./pages/seller/EditProductPage";
@@ -23,6 +24,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout><HomePage /></Layout>} />
           <Route path="/products" element={<Layout><BrowseProductsPage /></Layout>} />
+          <Route path="/products/:productId" element={<Layout><ProductDetailPage /></Layout>} />
           <Route path="/cart" element={<Layout><CartPage /></Layout>} />
           <Route path="/orders" element={<Layout><OrdersPage /></Layout>} />
           <Route element={<RoleGuard allowedRole="SELLER" />}>
