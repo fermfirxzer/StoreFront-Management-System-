@@ -51,9 +51,6 @@ export default function Navbar({ containerClass }: NavbarProps) {
             <NavLink key="browse" to="/products" onClick={closeMobileMenu}>
               Browse
             </NavLink>,
-            <div key="cart">
-              <CartNavButton />
-            </div>,
           ]
         : [];
 
@@ -87,6 +84,8 @@ export default function Navbar({ containerClass }: NavbarProps) {
               </Link>
             </div>
           )}
+
+          {role === "BUYER" ? <CartNavButton /> : null}
 
           <button
             aria-expanded={isMobileMenuOpen}

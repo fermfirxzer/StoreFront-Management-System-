@@ -1,10 +1,16 @@
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { addCartItem } from "../api/cartApi";
 import productPlaceholder from "../assets/product-placeholder.svg";
 import AppleButton from "../components/apple/AppleButton";
 import AppleCard from "../components/apple/AppleCard";
+import { useAuthStore } from "../stores/authStore";
+import { useCartStore } from "../stores/cartStore";
 import { useProductDetailQuery } from "../hooks/useProductQueries";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import type { Cart } from "../types/cart";
 
 const thaiCurrencyFormatter = new Intl.NumberFormat("th-TH", {
   style: "currency",
@@ -15,8 +21,46 @@ const thaiCurrencyFormatter = new Intl.NumberFormat("th-TH", {
 export default function ProductDetailPage() {
   const { productId = "" } = useParams();
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const role = useAuthStore((state) => state.role);
+  const setCart = useCartStore((state) => state.setCart);
+  const optimisticAddItem = useCartStore((state) => state.optimisticAddItem);
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
   const { data: product, isLoading, error } = useProductDetailQuery(productId);
   const backTarget = location.search ? `/products${location.search}` : "/products";
+  const addToCartMutation = useMutation({
+    mutationFn: () => addCartItem({ productId, quantity: 1 }),
+    onMutate: async () => {
+      if (!product) {
+        return { previousCart: useCartStore.getState().cart, previousQueryCart: undefined as Cart | undefined };
+      }
+
+      setCartMessage(null);
+      const previousCart = useCartStore.getState().cart;
+      const previousQueryCart = queryClient.getQueryData<Cart>(["cart"]);
+      optimisticAddItem({
+        product: {
+          id: product.id,
+          title: product.title,
+          unitPrice: product.unitPrice,
+          image: product.image,
+          availableQuantity: product.quantity,
+        },
+        quantity: 1,
+      });
+      return { previousCart, previousQueryCart };
+    },
+    onError: (mutationError, _variables, context) => {
+      setCart(context?.previousCart ?? null);
+      queryClient.setQueryData(["cart"], context?.previousQueryCart);
+      setCartMessage(getApiErrorMessage(mutationError, "We could not add that item to the cart."));
+    },
+    onSuccess: (cart) => {
+      setCart(cart);
+      queryClient.setQueryData(["cart"], cart);
+      setCartMessage("Added to cart.");
+    },
+  });
 
   return (
     <section className="animate-fade-in space-y-6">
@@ -120,8 +164,29 @@ export default function ProductDetailPage() {
               </p>
             </div>
 
-            <div className="mt-8">
-              <AppleButton to={backTarget} variant="secondary">
+            {cartMessage ? (
+              <p className="mt-6 text-[13px] leading-6 text-brand-700">{cartMessage}</p>
+            ) : null}
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              {role === "BUYER" ? (
+                <AppleButton
+                  disabled={product.quantity <= 0}
+                  loading={addToCartMutation.isPending}
+                  onClick={() => {
+                    void addToCartMutation.mutateAsync();
+                  }}
+                  variant="primary"
+                >
+                  Add to cart
+                </AppleButton>
+              ) : null}
+              {role === "BUYER" ? (
+                <AppleButton to="/cart" variant="secondary">
+                  View cart
+                </AppleButton>
+              ) : null}
+              <AppleButton to={backTarget} variant="ghost">
                 Back to catalog
               </AppleButton>
             </div>

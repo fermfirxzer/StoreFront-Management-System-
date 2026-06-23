@@ -1,7 +1,18 @@
+import { Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppleCard from "../components/apple/AppleCard";
+import { useOrdersQuery } from "../hooks/useOrderQueries";
+import { getApiErrorMessage } from "../utils/apiErrors";
+
+const thaiCurrencyFormatter = new Intl.NumberFormat("th-TH", {
+  style: "currency",
+  currency: "THB",
+  maximumFractionDigits: 2,
+});
 
 export default function OrdersPage() {
+  const { data: orders, isLoading, error } = useOrdersQuery(true);
+
   return (
     <section className="space-y-6">
       <AppleCard className="border-t-4 border-t-brand-500">
@@ -12,17 +23,96 @@ export default function OrdersPage() {
           My orders
         </h1>
         <p className="mt-3 max-w-2xl text-[15px] leading-7 text-apple-gray">
-          This placeholder keeps the footer link safe until the order history flow is added.
+          Review your completed purchases and the items captured at checkout time.
         </p>
-        <div className="mt-6">
-          <Link
-            className="inline-flex items-center rounded-full bg-gradient-to-r from-brand-500 to-violet-500 px-5 py-2.5 text-[15px] font-semibold text-white transition-colors duration-150 hover:from-brand-600 hover:to-violet-600"
-            to="/"
-          >
-            Back to home
-          </Link>
-        </div>
       </AppleCard>
+
+      {isLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <AppleCard key={index} className="space-y-4">
+              <div className="h-6 w-40 rounded-full apple-skeleton animate-shimmer" />
+              <div className="h-20 rounded-apple-input apple-skeleton animate-shimmer" />
+            </AppleCard>
+          ))}
+        </div>
+      ) : null}
+
+      {error ? (
+        <AppleCard className="border border-apple-red/20 bg-[#fff5f5] text-apple-red">
+          <p className="text-[13px] leading-6 animate-shake">
+            {getApiErrorMessage(error, "We could not load your orders.")}
+          </p>
+        </AppleCard>
+      ) : null}
+
+      {!isLoading && !error && orders ? (
+        orders.length > 0 ? (
+          <div className="space-y-4">
+            {orders.map((order) => (
+              <AppleCard key={order.id} className="space-y-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-600">
+                      Order
+                    </p>
+                    <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.02em] text-brand-900">
+                      {new Date(order.createdAt).toLocaleDateString("en-GB")}
+                    </h2>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-[13px] text-apple-gray">{order.totalQuantity} items</p>
+                    <p className="mt-1 text-[18px] font-semibold text-brand-900">
+                      {thaiCurrencyFormatter.format(order.subtotal)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {order.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex flex-col gap-2 rounded-apple-card bg-[#F8FAFF] p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="min-w-0">
+                        <p className="line-clamp-1 text-[15px] font-semibold text-brand-900">
+                          {item.productTitle}
+                        </p>
+                        <p className="mt-1 text-[13px] text-apple-gray">
+                          {item.quantity} x {thaiCurrencyFormatter.format(item.unitPrice)}
+                        </p>
+                      </div>
+                      <p className="text-[15px] font-semibold text-[#4338CA]">
+                        {thaiCurrencyFormatter.format(item.lineTotal)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </AppleCard>
+            ))}
+          </div>
+        ) : (
+          <AppleCard className="grid place-items-center py-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 shadow-sm">
+              <Package className="h-8 w-8 text-brand-600" />
+            </div>
+            <h2 className="mt-6 text-[24px] font-semibold tracking-[-0.03em] text-brand-900">
+              No orders yet
+            </h2>
+            <p className="mt-3 max-w-md text-[17px] leading-7 text-apple-gray">
+              When you complete checkout, your order history will appear here.
+            </p>
+            <div className="mt-8">
+              <Link
+                className="inline-flex items-center rounded-full bg-gradient-to-r from-brand-500 to-violet-500 px-5 py-2.5 text-[15px] font-semibold text-white transition-colors duration-150 hover:from-brand-600 hover:to-violet-600"
+                to="/products"
+              >
+                Browse products
+              </Link>
+            </div>
+          </AppleCard>
+        )
+      ) : null}
     </section>
   );
 }
