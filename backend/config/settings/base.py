@@ -5,8 +5,55 @@ from __future__ import annotations
 import os
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def _load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE pairs from a local .env file when present."""
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].strip()
+        if "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def _load_database_url() -> None:
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        return
+
+    parsed = urlparse(database_url)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        return
+
+    if parsed.path and len(parsed.path) > 1:
+        os.environ.setdefault("DB_NAME", parsed.path.lstrip("/"))
+    if parsed.username:
+        os.environ.setdefault("DB_USER", parsed.username)
+    if parsed.password:
+        os.environ.setdefault("DB_PASSWORD", parsed.password)
+    if parsed.hostname:
+        os.environ.setdefault("DB_HOST", parsed.hostname)
+    if parsed.port:
+        os.environ.setdefault("DB_PORT", str(parsed.port))
+
+
+_load_env_file(BASE_DIR / ".env")
+_load_database_url()
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
@@ -67,6 +114,9 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
+        "OPTIONS": {
+            "sslmode": os.getenv("DB_SSLMODE", "prefer"),
+        },
     }
 }
 
