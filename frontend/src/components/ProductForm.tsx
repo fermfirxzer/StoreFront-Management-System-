@@ -28,6 +28,8 @@ const emptyValues: ProductFormValues = {
   quantity: 0,
 };
 
+const formatNumericInput = (value?: number) => (value === undefined ? "" : String(value));
+
 export default function ProductForm({
   defaultValues,
   existingImageUrl = null,
@@ -39,6 +41,12 @@ export default function ProductForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl);
   const [isDragging, setIsDragging] = useState(false);
   const [createdObjectUrl, setCreatedObjectUrl] = useState<string | null>(null);
+  const [priceText, setPriceText] = useState(
+    formatNumericInput(defaultValues?.unitPrice ?? emptyValues.unitPrice)
+  );
+  const [quantityText, setQuantityText] = useState(
+    formatNumericInput(defaultValues?.quantity ?? emptyValues.quantity)
+  );
   const {
     control,
     handleSubmit,
@@ -59,6 +67,8 @@ export default function ProductForm({
       ...emptyValues,
       ...defaultValues,
     });
+    setPriceText(formatNumericInput(defaultValues?.unitPrice ?? emptyValues.unitPrice));
+    setQuantityText(formatNumericInput(defaultValues?.quantity ?? emptyValues.quantity));
   }, [defaultValues, reset]);
 
   useEffect(() => {
@@ -76,19 +86,37 @@ export default function ProductForm({
   const imagePreview = useMemo(() => previewUrl, [previewUrl]);
   const imageName = watch("image")?.name;
   const clampPrice = (rawValue: string) => {
+    if (rawValue === "") {
+      return { displayValue: "", formValue: undefined };
+    }
+
     const parsedValue = Number(rawValue);
     if (!Number.isFinite(parsedValue)) {
-      return 0;
+      return { displayValue: rawValue, formValue: undefined };
     }
-    return Math.min(Math.max(parsedValue, 0), MAX_PRODUCT_PRICE);
+
+    const clampedValue = Math.min(Math.max(parsedValue, 0), MAX_PRODUCT_PRICE);
+    return {
+      displayValue: clampedValue === parsedValue ? rawValue : String(clampedValue),
+      formValue: clampedValue,
+    };
   };
 
   const clampQuantity = (rawValue: string) => {
+    if (rawValue === "") {
+      return { displayValue: "", formValue: undefined };
+    }
+
     const parsedValue = Number(rawValue);
     if (!Number.isFinite(parsedValue)) {
-      return 0;
+      return { displayValue: rawValue, formValue: undefined };
     }
-    return Math.min(Math.max(Math.trunc(parsedValue), 0), MAX_PRODUCT_QUANTITY);
+
+    const clampedValue = Math.min(Math.max(Math.trunc(parsedValue), 0), MAX_PRODUCT_QUANTITY);
+    return {
+      displayValue: clampedValue === parsedValue ? rawValue : String(clampedValue),
+      formValue: clampedValue,
+    };
   };
 
   const syncPreviewFromFile = (file?: File) => {
@@ -208,11 +236,12 @@ export default function ProductForm({
                   hint="Maximum THB 10,000,000."
                   min="0"
                   max={MAX_PRODUCT_PRICE}
-                  value={field.value}
+                  value={priceText}
                   onBlur={field.onBlur}
                   onChange={(event) => {
                     const nextValue = clampPrice(event.currentTarget.value);
-                    field.onChange(nextValue);
+                    setPriceText(nextValue.displayValue);
+                    field.onChange(nextValue.formValue);
                   }}
                 />
               )}
@@ -232,11 +261,12 @@ export default function ProductForm({
                   type="number"
                   min="0"
                   max={MAX_PRODUCT_QUANTITY}
-                  value={field.value}
+                  value={quantityText}
                   onBlur={field.onBlur}
                   onChange={(event) => {
                     const nextValue = clampQuantity(event.currentTarget.value);
-                    field.onChange(nextValue);
+                    setQuantityText(nextValue.displayValue);
+                    field.onChange(nextValue.formValue);
                   }}
                 />
               )}

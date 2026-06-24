@@ -100,4 +100,38 @@ describe("ProductForm", () => {
     expect(screen.getByRole("spinbutton", { name: /Price/ })).toHaveValue(10000000);
     expect(screen.getByRole("spinbutton", { name: /Quantity/ })).toHaveValue(999999);
   });
+
+  it("keeps numeric fields empty after clearing so retyping does not add a leading zero", () => {
+    const onSubmit = vi.fn();
+
+    render(
+      <MemoryRouter>
+        <ProductForm
+          defaultValues={{
+            title: "Desk lamp",
+            unitPrice: 1000,
+            quantity: 1000,
+          }}
+          isLoading={false}
+          onSubmit={onSubmit}
+          submitLabel="Save Product"
+        />
+      </MemoryRouter>
+    );
+
+    const priceInput = screen.getByRole("spinbutton", { name: /Price/ });
+    const quantityInput = screen.getByRole("spinbutton", { name: /Quantity/ });
+
+    fireEvent.change(priceInput, { target: { value: "" } });
+    fireEvent.change(quantityInput, { target: { value: "" } });
+
+    expect(priceInput).toHaveValue(null);
+    expect(quantityInput).toHaveValue(null);
+
+    fireEvent.change(priceInput, { target: { value: "1000" } });
+    fireEvent.change(quantityInput, { target: { value: "1000" } });
+
+    expect(priceInput).toHaveValue(1000);
+    expect(quantityInput).toHaveValue(1000);
+  });
 });
