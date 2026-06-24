@@ -76,18 +76,26 @@ class ProductService:
         product: Product,
         data: dict,
         image=None,
+        remove_image: bool = False,
     ) -> Product:
         previous_image_name = product.image.name if product.image else None
+        previous_image_storage = product.image.storage if product.image else None
 
         for field, value in data.items():
             setattr(product, field, value)
         if image is not None:
             product.image = image
+        elif remove_image:
+            product.image = None
         product.full_clean()
         product.save()
 
-        if image is not None and previous_image_name and previous_image_name != product.image.name:
-            product.image.storage.delete(previous_image_name)
+        if (
+            previous_image_name
+            and previous_image_storage
+            and (remove_image or previous_image_name != product.image.name)
+        ):
+            previous_image_storage.delete(previous_image_name)
 
         return product
 

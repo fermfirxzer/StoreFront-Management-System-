@@ -11,9 +11,11 @@ MAX_PRODUCT_IMAGE_SIZE_BYTES = 2 * 1024 * 1024
 
 
 class ProductWriteSerializer(serializers.ModelSerializer):
+    remove_image = serializers.BooleanField(required=False, write_only=True)
+
     class Meta:
         model = Product
-        fields = ("title", "description", "unit_price", "quantity", "image")
+        fields = ("title", "description", "unit_price", "quantity", "image", "remove_image")
 
     def validate_unit_price(self, value: Decimal) -> Decimal:
         if value <= 0:

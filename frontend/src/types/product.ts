@@ -37,6 +37,7 @@ export interface CreateProductPayload {
   unitPrice: number;
   quantity: number;
   image?: File;
+  removeImage?: boolean;
 }
 
 export type UpdateProductPayload = Partial<CreateProductPayload>;

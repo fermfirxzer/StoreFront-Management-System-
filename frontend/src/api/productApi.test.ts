@@ -169,6 +169,14 @@ describe("product api", () => {
     expect(patchedFormData.get("quantity")).toBe("6");
     expect(updated.quantity).toBe(6);
 
+    await api.updateProduct("product-1", {
+      removeImage: true,
+    });
+
+    expect(patch).toHaveBeenCalledTimes(2);
+    const removeImageFormData = patch.mock.calls[1][1] as FormData;
+    expect(removeImageFormData.get("remove_image")).toBe("true");
+
     await api.deleteProduct("product-1");
     expect(del).toHaveBeenCalledWith("/products/product-1/");
   });

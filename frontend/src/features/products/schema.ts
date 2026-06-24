@@ -34,6 +34,7 @@ export const productSchema = z.object({
       "Image must be 2 MB or smaller."
     )
     .optional(),
+  removeImage: z.boolean().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;

@@ -57,6 +57,13 @@ describe("ProductForm", () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalled();
     });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image: undefined,
+        removeImage: true,
+      }),
+      expect.anything()
+    );
   });
 
   it("shows live counters and clamps numeric inputs to the allowed maximums", async () => {
@@ -92,5 +99,77 @@ describe("ProductForm", () => {
 
     expect(screen.getByRole("spinbutton", { name: /Price/ })).toHaveValue(10000000);
     expect(screen.getByRole("spinbutton", { name: /Quantity/ })).toHaveValue(999999);
+  });
+
+  it("keeps numeric fields empty after clearing so retyping does not add a leading zero", () => {
+    const onSubmit = vi.fn();
+
+    render(
+      <MemoryRouter>
+        <ProductForm
+          defaultValues={{
+            title: "Desk lamp",
+            unitPrice: 1000,
+            quantity: 1000,
+          }}
+          isLoading={false}
+          onSubmit={onSubmit}
+          submitLabel="Save Product"
+        />
+      </MemoryRouter>
+    );
+
+    const priceInput = screen.getByRole("spinbutton", { name: /Price/ });
+    const quantityInput = screen.getByRole("spinbutton", { name: /Quantity/ });
+
+    fireEvent.change(priceInput, { target: { value: "" } });
+    fireEvent.change(quantityInput, { target: { value: "" } });
+
+    expect(priceInput).toHaveValue(null);
+    expect(quantityInput).toHaveValue(null);
+
+    fireEvent.change(priceInput, { target: { value: "1000" } });
+    fireEvent.change(quantityInput, { target: { value: "1000" } });
+
+    expect(priceInput).toHaveValue(1000);
+    expect(quantityInput).toHaveValue(1000);
+  });
+
+  it("does not reset edited fields when the parent rerenders with the same defaults", () => {
+    const onSubmit = vi.fn();
+    const defaultValues = {
+      title: "Desk lamp",
+      description: "Warm light",
+      unitPrice: 24.99,
+      quantity: 5,
+    };
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <ProductForm
+          defaultValues={{ ...defaultValues }}
+          isLoading={false}
+          onSubmit={onSubmit}
+          submitLabel="Save Product"
+        />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: /Product title/ }), {
+      target: { value: "Desk lamp pro" },
+    });
+
+    rerender(
+      <MemoryRouter>
+        <ProductForm
+          defaultValues={{ ...defaultValues }}
+          isLoading
+          onSubmit={onSubmit}
+          submitLabel="Save Product"
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("textbox", { name: /Product title/ })).toHaveValue("Desk lamp pro");
   });
 });

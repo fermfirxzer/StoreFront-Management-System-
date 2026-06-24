@@ -30,8 +30,8 @@ class Product(models.Model):
     class Meta:
         ordering = ["-created_at"]
         constraints = [
-            CheckConstraint(check=Q(unit_price__gt=0), name="unit_price_positive"),
-            CheckConstraint(check=Q(quantity__gte=0), name="quantity_non_negative"),
+            CheckConstraint(condition=Q(unit_price__gt=0), name="unit_price_positive"),
+            CheckConstraint(condition=Q(quantity__gte=0), name="quantity_non_negative"),
         ]
         indexes = [
             models.Index(fields=["seller", "-created_at"]),
