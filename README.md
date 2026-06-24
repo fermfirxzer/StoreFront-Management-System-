@@ -28,7 +28,7 @@ Install these before starting:
 ## 1. Clone The Project
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/fermfirxzer/StoreFront-Management-System-
 cd stone-mash-exam
 git switch main
 ```
@@ -184,11 +184,6 @@ npm run dev
 npm run build
 npm run lint
 ```
-
-## Branch Notes
-
-- `main`: local development setup, easiest branch to clone and run step by step.
-- `deployment`: Docker deployment setup for the live site.
 
 Live deployment:
 
