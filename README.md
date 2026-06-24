@@ -6,6 +6,9 @@ The production Docker deployment lives on the deployment branch and is available
 https://storefront.jirayusmoolsart.online/. This `main` branch README is focused on
 cloning the project and running it locally step by step.
 
+Note: when opening the live site, please wait a little bit for Render to resume
+the project.
+
 ## Tech Stack
 
 - Backend: Django, Django REST Framework, PostgreSQL
@@ -192,3 +195,6 @@ Live deployment:
 ```text
 https://storefront.jirayusmoolsart.online/
 ```
+
+If the site does not load immediately, wait a little bit for Render to resume
+the project.
