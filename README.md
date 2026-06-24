@@ -69,10 +69,22 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/marketplace
 DB_SSLMODE=prefer
 JWT_ACCESS_TOKEN_LIFETIME_MINUTES=60
 JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
+
+# Supabase Storage values for uploaded product images.
+# Use these when product images should be stored in Supabase instead of local media files.
+SUPABASE_PROJECT_REF=
+SUPABASE_STORAGE_BUCKET=
+SUPABASE_S3_ACCESS_KEY_ID=
+SUPABASE_S3_SECRET_ACCESS_KEY=
+SUPABASE_S3_REGION=us-east-1
+SUPABASE_S3_ENDPOINT_URL=
 ```
 
 Use `DATABASE_URL` for the database connection. The backend will read the
 database settings from this value.
+
+The Supabase Storage values are used for product image uploads when images are
+stored in Supabase Storage instead of the local `backend/media` folder.
 
 ### Frontend Env
 
