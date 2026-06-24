@@ -76,7 +76,7 @@ SUPABASE_PROJECT_REF=
 SUPABASE_STORAGE_BUCKET=
 SUPABASE_S3_ACCESS_KEY_ID=
 SUPABASE_S3_SECRET_ACCESS_KEY=
-SUPABASE_S3_REGION=us-east-1
+SUPABASE_S3_REGION=ap-northeast-1
 SUPABASE_S3_ENDPOINT_URL=
 ```
 
@@ -112,7 +112,33 @@ DB_SSLMODE=require
 Keep your real database password only in `backend/.env`. Do not commit `.env`
 files to Git.
 
-## 4. Run Backend
+## 4. Set Up Supabase Storage For Images
+
+Use Supabase Storage when uploaded product images should be saved in Supabase
+instead of the local folder.
+
+1. Open your Supabase project.
+2. Go to `Storage` and create or select the `product-images` bucket.
+3. Go to `Project Settings` > `Storage`.
+4. Create S3 access keys.
+5. Paste the values into `backend/.env`.
+
+Example for `backend/.env`:
+
+```env
+SUPABASE_PROJECT_REF=ibuqxmqpgfkqlpknbddx
+SUPABASE_STORAGE_BUCKET=product-images
+SUPABASE_S3_ACCESS_KEY_ID=<your-supabase-s3-access-key-id>
+SUPABASE_S3_SECRET_ACCESS_KEY=<your-supabase-s3-secret-access-key>
+SUPABASE_S3_REGION=ap-northeast-1
+SUPABASE_S3_ENDPOINT_URL=https://ibuqxmqpgfkqlpknbddx.storage.supabase.co/storage/v1/s3
+```
+
+Replace the access key and secret key placeholders with the real values in your
+local `backend/.env` file. Keep the S3 access key and secret key only in
+`backend/.env`. Do not commit real Supabase Storage credentials to Git.
+
+## 5. Run Backend
 
 From the project root:
 
@@ -161,7 +187,7 @@ To create an admin user:
 python manage.py createsuperuser
 ```
 
-## 5. Run Frontend
+## 6. Run Frontend
 
 Open a second terminal from the project root:
 
