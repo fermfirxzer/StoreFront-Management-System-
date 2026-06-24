@@ -37,6 +37,12 @@ export default function ProductForm({
   isLoading,
   submitLabel = "Save product",
 }: ProductFormProps) {
+  const defaultTitle = defaultValues?.title;
+  const defaultDescription = defaultValues?.description;
+  const defaultUnitPrice = defaultValues?.unitPrice;
+  const defaultQuantity = defaultValues?.quantity;
+  const defaultImage = defaultValues?.image;
+  const defaultRemoveImage = defaultValues?.removeImage;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl);
   const [isDragging, setIsDragging] = useState(false);
@@ -65,11 +71,24 @@ export default function ProductForm({
   useEffect(() => {
     reset({
       ...emptyValues,
-      ...defaultValues,
+      title: defaultTitle ?? emptyValues.title,
+      description: defaultDescription ?? emptyValues.description,
+      unitPrice: defaultUnitPrice ?? emptyValues.unitPrice,
+      quantity: defaultQuantity ?? emptyValues.quantity,
+      image: defaultImage,
+      removeImage: defaultRemoveImage,
     });
-    setPriceText(formatNumericInput(defaultValues?.unitPrice ?? emptyValues.unitPrice));
-    setQuantityText(formatNumericInput(defaultValues?.quantity ?? emptyValues.quantity));
-  }, [defaultValues, reset]);
+    setPriceText(formatNumericInput(defaultUnitPrice ?? emptyValues.unitPrice));
+    setQuantityText(formatNumericInput(defaultQuantity ?? emptyValues.quantity));
+  }, [
+    defaultDescription,
+    defaultImage,
+    defaultQuantity,
+    defaultRemoveImage,
+    defaultTitle,
+    defaultUnitPrice,
+    reset,
+  ]);
 
   useEffect(() => {
     setPreviewUrl(existingImageUrl);

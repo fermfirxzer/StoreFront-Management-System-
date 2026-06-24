@@ -134,4 +134,42 @@ describe("ProductForm", () => {
     expect(priceInput).toHaveValue(1000);
     expect(quantityInput).toHaveValue(1000);
   });
+
+  it("does not reset edited fields when the parent rerenders with the same defaults", () => {
+    const onSubmit = vi.fn();
+    const defaultValues = {
+      title: "Desk lamp",
+      description: "Warm light",
+      unitPrice: 24.99,
+      quantity: 5,
+    };
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <ProductForm
+          defaultValues={{ ...defaultValues }}
+          isLoading={false}
+          onSubmit={onSubmit}
+          submitLabel="Save Product"
+        />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: /Product title/ }), {
+      target: { value: "Desk lamp pro" },
+    });
+
+    rerender(
+      <MemoryRouter>
+        <ProductForm
+          defaultValues={{ ...defaultValues }}
+          isLoading
+          onSubmit={onSubmit}
+          submitLabel="Save Product"
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("textbox", { name: /Product title/ })).toHaveValue("Desk lamp pro");
+  });
 });
