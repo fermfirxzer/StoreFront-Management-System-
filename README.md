@@ -25,7 +25,7 @@ Install these before starting:
 ## 1. Clone The Project
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/fermfirxzer/StoreFront-Management-System-
 cd stone-mash-exam
 git switch main
 ```
