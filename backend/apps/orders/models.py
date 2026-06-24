@@ -47,9 +47,9 @@ class OrderItem(models.Model):
     class Meta:
         ordering = ["created_at"]
         constraints = [
-            CheckConstraint(check=Q(quantity__gt=0), name="order_item_quantity_positive"),
-            CheckConstraint(check=Q(unit_price__gt=0), name="order_item_unit_price_positive"),
-            CheckConstraint(check=Q(line_total__gte=0), name="order_item_line_total_non_negative"),
+            CheckConstraint(condition=Q(quantity__gt=0), name="order_item_quantity_positive"),
+            CheckConstraint(condition=Q(unit_price__gt=0), name="order_item_unit_price_positive"),
+            CheckConstraint(condition=Q(line_total__gte=0), name="order_item_line_total_non_negative"),
         ]
         indexes = [
             models.Index(fields=["order"]),

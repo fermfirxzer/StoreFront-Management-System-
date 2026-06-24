@@ -40,7 +40,7 @@ class CartItem(models.Model):
     class Meta:
         ordering = ["created_at"]
         constraints = [
-            CheckConstraint(check=Q(quantity__gt=0), name="cart_item_quantity_positive"),
+            CheckConstraint(condition=Q(quantity__gt=0), name="cart_item_quantity_positive"),
             models.UniqueConstraint(fields=["cart", "product"], name="unique_product_per_cart"),
         ]
         indexes = [

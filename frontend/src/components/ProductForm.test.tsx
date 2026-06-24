@@ -57,6 +57,13 @@ describe("ProductForm", () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalled();
     });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image: undefined,
+        removeImage: true,
+      }),
+      expect.anything()
+    );
   });
 
   it("shows live counters and clamps numeric inputs to the allowed maximums", async () => {

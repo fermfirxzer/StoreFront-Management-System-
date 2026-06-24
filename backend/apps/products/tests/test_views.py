@@ -414,6 +414,31 @@ class ProductViewTests(APITestCase):
         self.product.refresh_from_db()
         self.assertEqual(self.product.title, "Desk lamp pro")
 
+    def test_seller_can_remove_product_image_without_uploading_new_one(self) -> None:
+        self.authenticate(self.seller)
+        image = SimpleUploadedFile(
+            "product.jpg",
+            b"fake image bytes",
+            content_type="image/jpeg",
+        )
+        self.product.image = image
+        self.product.save()
+        image_path = Path(self.product.image.path)
+
+        response = self.client.patch(
+            reverse("product-detail", kwargs={"product_id": self.product.id}),
+            {
+                "remove_image": "true",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.product.refresh_from_db()
+        self.assertFalse(self.product.image)
+        self.assertIsNone(response.data["data"]["image"])
+        self.assertFalse(image_path.exists())
+
     def test_seller_cannot_update_product_with_price_above_maximum(self) -> None:
         self.authenticate(self.seller)
 

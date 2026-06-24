@@ -63,9 +63,11 @@ class SellerProductListCreateView(APIView):
     def post(self, request) -> Response:
         serializer = ProductWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data.copy()
+        data.pop("remove_image", None)
         product = self.service.create_product(
             seller=request.user,
-            data=serializer.validated_data,
+            data=data,
             image=request.FILES.get("image"),
         )
         response_serializer = ProductReadSerializer(product, context={"request": request})
@@ -109,10 +111,13 @@ class ProductDetailView(APIView):
         self.check_object_permissions(request, product)
         serializer = ProductWriteSerializer(data=request.data, partial=False)
         serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data.copy()
+        remove_image = data.pop("remove_image", False)
         updated_product = self.service.update_product(
             product=product,
-            data=serializer.validated_data,
+            data=data,
             image=request.FILES.get("image"),
+            remove_image=remove_image,
         )
         response_serializer = ProductReadSerializer(
             updated_product,
@@ -125,10 +130,13 @@ class ProductDetailView(APIView):
         self.check_object_permissions(request, product)
         serializer = ProductWriteSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data.copy()
+        remove_image = data.pop("remove_image", False)
         updated_product = self.service.update_product(
             product=product,
-            data=serializer.validated_data,
+            data=data,
             image=request.FILES.get("image"),
+            remove_image=remove_image,
         )
         response_serializer = ProductReadSerializer(
             updated_product,

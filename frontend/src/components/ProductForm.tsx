@@ -109,6 +109,7 @@ export default function ProductForm({
 
   const clearImage = () => {
     setValue("image", undefined, { shouldValidate: true, shouldDirty: true });
+    setValue("removeImage", Boolean(existingImageUrl), { shouldDirty: true });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -121,6 +122,7 @@ export default function ProductForm({
 
   const handleFileChange = (file?: File) => {
     setValue("image", file, { shouldValidate: true, shouldDirty: true });
+    setValue("removeImage", false, { shouldDirty: true });
     syncPreviewFromFile(file);
   };
 

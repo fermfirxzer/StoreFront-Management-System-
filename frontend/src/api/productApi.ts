@@ -55,6 +55,9 @@ function buildProductFormData(payload: CreateProductPayload | UpdateProductPaylo
   if (payload.image instanceof File) {
     formData.append("image", payload.image);
   }
+  if (payload.removeImage) {
+    formData.append("remove_image", "true");
+  }
 
   return formData;
 }

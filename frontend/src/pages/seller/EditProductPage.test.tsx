@@ -88,4 +88,30 @@ describe("EditProductPage", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/seller");
     });
   });
+
+  it("submits image removal when the current image is removed", async () => {
+    mockUpdateProduct.mockResolvedValue({
+      id: "product-1",
+      title: "Desk lamp",
+      image: null,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/seller/products/product-1/edit"]}>
+        <Routes>
+          <Route path="/seller/products/:productId/edit" element={<EditProductPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Product" }));
+
+    await waitFor(() => {
+      expect(mockUpdateProduct).toHaveBeenCalledWith(
+        "product-1",
+        expect.objectContaining({ removeImage: true })
+      );
+    });
+  });
 });
