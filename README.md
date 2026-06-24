@@ -29,15 +29,15 @@ Install these before starting:
 
 ```bash
 git clone https://github.com/fermfirxzer/StoreFront-Management-System-
-cd stone-mash-exam
-git switch main
+cd StoreFront-Management-System-
+
 ```
 
 If you already cloned the project:
 
 ```bash
 git pull
-git switch main
+
 ```
 
 ## 2. Create Environment Files
