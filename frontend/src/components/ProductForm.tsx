@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { productSchema, type ProductFormValues } from "../features/products/schema";
+import { Controller, useForm } from "react-hook-form";
+import {
+  MAX_PRODUCT_DESCRIPTION_LENGTH,
+  MAX_PRODUCT_PRICE,
+  MAX_PRODUCT_QUANTITY,
+  MAX_PRODUCT_TITLE_LENGTH,
+  productSchema,
+  type ProductFormValues,
+} from "../features/products/schema";
 import AppleButton from "./apple/AppleButton";
 import AppleCard from "./apple/AppleCard";
 import AppleInput from "./apple/AppleInput";
@@ -33,7 +40,7 @@ export default function ProductForm({
   const [isDragging, setIsDragging] = useState(false);
   const [createdObjectUrl, setCreatedObjectUrl] = useState<string | null>(null);
   const {
-    register,
+    control,
     handleSubmit,
     setValue,
     reset,
@@ -68,6 +75,21 @@ export default function ProductForm({
 
   const imagePreview = useMemo(() => previewUrl, [previewUrl]);
   const imageName = watch("image")?.name;
+  const clampPrice = (rawValue: string) => {
+    const parsedValue = Number(rawValue);
+    if (!Number.isFinite(parsedValue)) {
+      return 0;
+    }
+    return Math.min(Math.max(parsedValue, 0), MAX_PRODUCT_PRICE);
+  };
+
+  const clampQuantity = (rawValue: string) => {
+    const parsedValue = Number(rawValue);
+    if (!Number.isFinite(parsedValue)) {
+      return 0;
+    }
+    return Math.min(Math.max(Math.trunc(parsedValue), 0), MAX_PRODUCT_QUANTITY);
+  };
 
   const syncPreviewFromFile = (file?: File) => {
     if (createdObjectUrl) {
@@ -115,42 +137,107 @@ export default function ProductForm({
             </h2>
           </div>
 
-          <AppleInput
-            {...register("title")}
-            error={errors.title?.message}
-            label="Product title"
-            placeholder="Minimal desk lamp"
+          <Controller
+            control={control}
+            name="title"
+            render={({ field }) => {
+              const titleText = field.value ?? "";
+
+              return (
+                <AppleInput
+                  ref={field.ref}
+                  error={errors.title?.message}
+                  label="Product title"
+                  placeholder="Minimal desk lamp"
+                  maxLength={MAX_PRODUCT_TITLE_LENGTH}
+                  hint={`${titleText.length}/${MAX_PRODUCT_TITLE_LENGTH}`}
+                  value={titleText}
+                  onBlur={field.onBlur}
+                  onChange={(event) => {
+                    field.onChange(event.currentTarget.value.slice(0, MAX_PRODUCT_TITLE_LENGTH));
+                  }}
+                />
+              );
+            }}
           />
 
-          <AppleInput
-            {...register("description")}
-            as="textarea"
-            error={errors.description?.message}
-            label="Description"
-            placeholder="Describe the product, materials, and who it is for."
-            rows={4}
+          <Controller
+            control={control}
+            name="description"
+            render={({ field }) => {
+              const descriptionText = field.value ?? "";
+
+              return (
+                <AppleInput
+                  ref={field.ref}
+                  as="textarea"
+                  error={errors.description?.message}
+                  label="Description"
+                  placeholder="Describe the product, materials, and who it is for."
+                  rows={4}
+                  maxLength={MAX_PRODUCT_DESCRIPTION_LENGTH}
+                  hint={`${descriptionText.length}/${MAX_PRODUCT_DESCRIPTION_LENGTH}`}
+                  value={descriptionText}
+                  onBlur={field.onBlur}
+                  onChange={(event) => {
+                    field.onChange(
+                      event.currentTarget.value.slice(0, MAX_PRODUCT_DESCRIPTION_LENGTH)
+                    );
+                  }}
+                />
+              );
+            }}
           />
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <AppleInput
-              {...register("unitPrice", { valueAsNumber: true })}
-              error={errors.unitPrice?.message}
-              label="Price"
-              prefix="THB"
-              inputMode="decimal"
-              placeholder="149.99"
-              step="0.01"
-              type="number"
+            <Controller
+              control={control}
+              name="unitPrice"
+              render={({ field }) => (
+                <AppleInput
+                  ref={field.ref}
+                  error={errors.unitPrice?.message}
+                  label="Price"
+                  prefix="THB"
+                  inputMode="decimal"
+                  placeholder="149.99"
+                  step="0.01"
+                  type="number"
+                  hint="Maximum THB 10,000,000."
+                  min="0"
+                  max={MAX_PRODUCT_PRICE}
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChange={(event) => {
+                    const nextValue = clampPrice(event.currentTarget.value);
+                    field.onChange(nextValue);
+                  }}
+                />
+              )}
             />
 
-            <AppleInput
-              {...register("quantity", { valueAsNumber: true })}
-              error={errors.quantity?.message}
-              label="Quantity"
-              inputMode="numeric"
-              placeholder="12"
-              step="1"
-              type="number"
+            <Controller
+              control={control}
+              name="quantity"
+              render={({ field }) => (
+                <AppleInput
+                  ref={field.ref}
+                  error={errors.quantity?.message}
+                  label="Quantity"
+                  inputMode="numeric"
+                  placeholder="12"
+                  step="1"
+                  type="number"
+                  min="0"
+                  max={MAX_PRODUCT_QUANTITY}
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChange={(event) => {
+                    const nextValue = clampQuantity(event.currentTarget.value);
+                    field.onChange(nextValue);
+                  }}
+                />
+              )}
             />
           </div>
 
@@ -255,7 +342,7 @@ export default function ProductForm({
                     Click to upload or drag and drop
                   </p>
                   <p className="text-[13px] leading-6 text-apple-gray">
-                    PNG, JPG, WEBP up to the limits supported by the backend.
+                    PNG, JPG, WEBP up to 2 MB.
                   </p>
                 </div>
               </div>
@@ -279,7 +366,7 @@ export default function ProductForm({
             </p>
             <p className="mt-2 text-[13px] leading-6 text-apple-gray">
               Common image formats are supported. A square or 16:9 image works
-              especially well in the dashboard grid.
+              especially well in the dashboard grid. Maximum image upload: 2 MB.
             </p>
           </div>
 

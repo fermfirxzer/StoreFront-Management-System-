@@ -1,28 +1,58 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("product api", () => {
   beforeEach(() => {
     vi.resetModules();
   });
 
-  it("maps seller product responses and sends multipart payloads", async () => {
+  it("maps marketplace and seller product responses and sends multipart payloads", async () => {
     const get = vi.fn((url: string) => {
-      if (url === "/products/") {
+      if (url.startsWith("/products/?")) {
         return Promise.resolve({
           data: {
-            data: [
-              {
-                id: "product-1",
-                seller: { id: 1, email: "seller@example.com" },
-                title: "Desk lamp",
-                description: "Warm light",
-                unit_price: "24.99",
-                quantity: 5,
-                image: null,
-                created_at: "2026-06-23T00:00:00.000Z",
-                updated_at: "2026-06-23T00:00:00.000Z",
-              },
-            ],
+            data: {
+              count: 1,
+              next: null,
+              previous: null,
+              results: [
+                {
+                  id: "product-1",
+                  seller: { id: 1, email: "seller@example.com" },
+                  title: "Desk lamp",
+                  description: "Warm light",
+                  unit_price: "24.99",
+                  quantity: 5,
+                  image: null,
+                  created_at: "2026-06-23T00:00:00.000Z",
+                  updated_at: "2026-06-23T00:00:00.000Z",
+                },
+              ],
+            },
+          },
+        });
+      }
+
+      if (url.startsWith("/products/seller/?")) {
+        return Promise.resolve({
+          data: {
+            data: {
+              count: 1,
+              next: null,
+              previous: null,
+              results: [
+                {
+                  id: "product-1",
+                  seller: { id: 1, email: "seller@example.com" },
+                  title: "Desk lamp",
+                  description: "Warm light",
+                  unit_price: "24.99",
+                  quantity: 5,
+                  image: null,
+                  created_at: "2026-06-23T00:00:00.000Z",
+                  updated_at: "2026-06-23T00:00:00.000Z",
+                },
+              ],
+            },
           },
         });
       }
@@ -80,15 +110,35 @@ describe("product api", () => {
     }));
 
     const api = await import("./productApi");
-    const products = await api.getSellerProducts();
-    expect(products[0]).toMatchObject({
+
+    const paginated = await api.getMarketplaceProducts({
+      page: 2,
+      pageSize: 12,
+      search: "lamp",
+      minPrice: "10",
+      maxPrice: "100",
+      sortBy: "price-asc",
+    });
+    expect(get).toHaveBeenCalledWith(
+      "/products/?page=2&page_size=12&search=lamp&min_price=10&max_price=100&sort=price-asc"
+    );
+    expect(paginated.results[0]).toMatchObject({
       id: "product-1",
       title: "Desk lamp",
       unitPrice: 24.99,
       quantity: 5,
     });
 
-    const single = await api.getSellerProductById("product-1");
+    const sellerProducts = await api.getPaginatedSellerProducts({
+      page: 1,
+      pageSize: 12,
+      search: "desk",
+      sortBy: "price-desc",
+    });
+    expect(get).toHaveBeenCalledWith("/products/seller/?page=1&page_size=12&search=desk&sort=price-desc");
+    expect(sellerProducts.results[0].title).toBe("Desk lamp");
+
+    const single = await api.getProductById("product-1");
     expect(single.unitPrice).toBe(24.99);
 
     const image = new File(["image"], "product.png", { type: "image/png" });
@@ -101,6 +151,7 @@ describe("product api", () => {
     });
 
     expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith("/products/seller/", expect.any(FormData));
     const postedFormData = post.mock.calls[0][1] as FormData;
     expect(postedFormData.get("title")).toBe("Chair");
     expect(postedFormData.get("unit_price")).toBe("79.5");

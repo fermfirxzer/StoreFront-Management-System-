@@ -15,8 +15,10 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 
 from apps.products.models import Product
+from apps.products.models import MAX_UNIT_PRICE
 from apps.products.views import ProductDetailView
 from core.permissions import IsProductOwner
+from core.permissions import IsSeller
 
 User = get_user_model()
 
@@ -47,6 +49,13 @@ class ProductViewTests(APITestCase):
             unit_price=Decimal("24.99"),
             quantity=5,
         )
+        self.other_product = Product.objects.create(
+            seller=self.other_seller,
+            title="Phone stand",
+            description="Foldable stand",
+            unit_price=Decimal("19.99"),
+            quantity=0,
+        )
 
     def tearDown(self) -> None:
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
@@ -54,25 +63,233 @@ class ProductViewTests(APITestCase):
     def authenticate(self, user) -> None:
         self.client.force_authenticate(user=user)
 
-    def test_unauthenticated_request_returns_401(self) -> None:
-        response = self.client.get(reverse("product-list-create"))
+    def test_marketplace_list_requires_authentication(self) -> None:
+        response = self.client.get(reverse("product-list"))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_buyer_role_returns_403(self) -> None:
+    def test_seller_products_requires_authentication(self) -> None:
+        response = self.client.get(reverse("seller-product-list-create"))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_buyer_can_browse_marketplace_products(self) -> None:
         self.authenticate(self.buyer)
-        response = self.client.get(reverse("product-list-create"))
+
+        response = self.client.get(reverse("product-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 2)
+        self.assertEqual(len(response.data["data"]["results"]), 2)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+        self.assertEqual(response.data["data"]["results"][1]["title"], "Phone stand")
+
+    def test_marketplace_list_uses_paginated_response(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"page_size": 1, "page": 1})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "success")
+        self.assertEqual(response.data["data"]["count"], 2)
+        self.assertEqual(len(response.data["data"]["results"]), 1)
+        self.assertIsNotNone(response.data["data"]["next"])
+
+    def test_marketplace_search_filters_by_title_case_insensitively(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"search": "PHONE"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Phone stand")
+
+    def test_marketplace_min_price_filter_works(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"min_price": "20"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
+    def test_marketplace_max_price_filter_works(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"max_price": "20"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Phone stand")
+
+    def test_marketplace_in_stock_filter_works(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"in_stock": "true"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
+    def test_marketplace_out_of_stock_filter_works(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"in_stock": "false"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Phone stand")
+
+    def test_marketplace_combined_filters_work(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(
+            reverse("product-list"),
+            {
+                "search": "desk",
+                "min_price": "20",
+                "max_price": "30",
+                "in_stock": "true",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
+    def test_marketplace_sorts_by_price_ascending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "price-asc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Phone stand")
+
+    def test_marketplace_sorts_by_price_descending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "price-desc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
+    def test_marketplace_sorts_by_quantity_ascending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "quantity-asc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Phone stand")
+
+    def test_marketplace_sorts_by_quantity_descending(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"sort": "quantity-desc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
+    def test_marketplace_sorts_by_latest_update(self) -> None:
+        self.authenticate(self.buyer)
+        self.product.title = "Desk lamp updated"
+        self.product.save(update_fields=["title", "updated_at"])
+
+        response = self.client.get(reverse("product-list"), {"sort": "updated-desc"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp updated")
+
+    def test_marketplace_response_does_not_expose_private_user_fields(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"))
+
+        seller_payload = response.data["data"]["results"][0]["seller"]
+        self.assertEqual(set(seller_payload.keys()), {"id", "email"})
+
+    def test_invalid_price_filter_returns_400(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("product-list"), {"min_price": "abc"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_buyer_cannot_access_seller_product_list(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(reverse("seller-product-list-create"))
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_seller_can_list_own_products(self) -> None:
         self.authenticate(self.seller)
-        response = self.client.get(reverse("product-list-create"))
+
+        response = self.client.get(reverse("seller-product-list-create"))
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["data"]), 1)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(len(response.data["data"]["results"]), 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Desk lamp")
+
+    def test_seller_product_list_supports_pagination_and_search(self) -> None:
+        self.authenticate(self.seller)
+        Product.objects.create(
+            seller=self.seller,
+            title="Office chair",
+            description="Mesh back",
+            unit_price=Decimal("99.99"),
+            quantity=4,
+        )
+
+        response = self.client.get(
+            reverse("seller-product-list-create"),
+            {"page_size": 1, "page": 1, "search": "office"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["count"], 1)
+        self.assertEqual(len(response.data["data"]["results"]), 1)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Office chair")
+
+    def test_seller_product_list_sorts_by_price_descending(self) -> None:
+        self.authenticate(self.seller)
+        Product.objects.create(
+            seller=self.seller,
+            title="Office chair",
+            description="Mesh back",
+            unit_price=Decimal("99.99"),
+            quantity=4,
+        )
+
+        response = self.client.get(
+            reverse("seller-product-list-create"),
+            {"sort": "price-desc"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Office chair")
+
+    def test_seller_product_list_sorts_by_quantity_descending(self) -> None:
+        self.authenticate(self.seller)
+        Product.objects.create(
+            seller=self.seller,
+            title="Office chair",
+            description="Mesh back",
+            unit_price=Decimal("99.99"),
+            quantity=9,
+        )
+
+        response = self.client.get(
+            reverse("seller-product-list-create"),
+            {"sort": "quantity-desc"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["results"][0]["title"], "Office chair")
 
     def test_valid_data_creates_product_successfully(self) -> None:
         self.authenticate(self.seller)
+
         response = self.client.post(
-            reverse("product-list-create"),
+            reverse("seller-product-list-create"),
             {
                 "title": "Headphones",
                 "description": "Noise cancelling",
@@ -81,13 +298,15 @@ class ProductViewTests(APITestCase):
             },
             format="multipart",
         )
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Product.objects.filter(seller=self.seller).count(), 2)
 
     def test_unit_price_less_than_or_equal_to_zero_returns_400(self) -> None:
         self.authenticate(self.seller)
+
         response = self.client.post(
-            reverse("product-list-create"),
+            reverse("seller-product-list-create"),
             {
                 "title": "Headphones",
                 "description": "Noise cancelling",
@@ -96,12 +315,31 @@ class ProductViewTests(APITestCase):
             },
             format="multipart",
         )
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unit_price_above_maximum_returns_400(self) -> None:
+        self.authenticate(self.seller)
+
+        response = self.client.post(
+            reverse("seller-product-list-create"),
+            {
+                "title": "Headphones",
+                "description": "Noise cancelling",
+                "unit_price": str(MAX_UNIT_PRICE + Decimal("0.01")),
+                "quantity": 8,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Price must be 10,000,000 THB or less.", response.data["message"])
 
     def test_quantity_less_than_zero_returns_400(self) -> None:
         self.authenticate(self.seller)
+
         response = self.client.post(
-            reverse("product-list-create"),
+            reverse("seller-product-list-create"),
             {
                 "title": "Headphones",
                 "description": "Noise cancelling",
@@ -110,11 +348,14 @@ class ProductViewTests(APITestCase):
             },
             format="multipart",
         )
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_missing_required_fields_returns_400(self) -> None:
         self.authenticate(self.seller)
-        response = self.client.post(reverse("product-list-create"), {}, format="multipart")
+
+        response = self.client.post(reverse("seller-product-list-create"), {}, format="multipart")
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_image_upload_saves_to_correct_path(self) -> None:
@@ -128,8 +369,9 @@ class ProductViewTests(APITestCase):
             ),
             content_type="image/gif",
         )
+
         response = self.client.post(
-            reverse("product-list-create"),
+            reverse("seller-product-list-create"),
             {
                 "title": "Poster",
                 "description": "Art print",
@@ -139,12 +381,24 @@ class ProductViewTests(APITestCase):
             },
             format="multipart",
         )
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         created_product = Product.objects.get(title="Poster")
         self.assertTrue(created_product.image.name.startswith("products/"))
 
+    def test_buyer_can_retrieve_product_detail(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.get(
+            reverse("product-detail", kwargs={"product_id": self.product.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["id"], str(self.product.id))
+
     def test_seller_can_update_own_product(self) -> None:
         self.authenticate(self.seller)
+
         response = self.client.put(
             reverse("product-detail", kwargs={"product_id": self.product.id}),
             {
@@ -155,12 +409,39 @@ class ProductViewTests(APITestCase):
             },
             format="multipart",
         )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.product.refresh_from_db()
         self.assertEqual(self.product.title, "Desk lamp pro")
 
+    def test_seller_cannot_update_product_with_price_above_maximum(self) -> None:
+        self.authenticate(self.seller)
+
+        response = self.client.patch(
+            reverse("product-detail", kwargs={"product_id": self.product.id}),
+            {
+                "unit_price": str(MAX_UNIT_PRICE + Decimal("0.01")),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Price must be 10,000,000 THB or less.", response.data["message"])
+
+    def test_buyer_cannot_update_product(self) -> None:
+        self.authenticate(self.buyer)
+
+        response = self.client.patch(
+            reverse("product-detail", kwargs={"product_id": self.product.id}),
+            {"quantity": 10},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_seller_cannot_update_another_sellers_product(self) -> None:
         self.authenticate(self.other_seller)
+
         response = self.client.put(
             reverse("product-detail", kwargs={"product_id": self.product.id}),
             {
@@ -171,17 +452,18 @@ class ProductViewTests(APITestCase):
             },
             format="multipart",
         )
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_partial_update_works_correctly(self) -> None:
         self.authenticate(self.seller)
+
         response = self.client.patch(
             reverse("product-detail", kwargs={"product_id": self.product.id}),
-            {
-                "quantity": 10,
-            },
+            {"quantity": 10},
             format="multipart",
         )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.product.refresh_from_db()
         self.assertEqual(self.product.quantity, 10)
@@ -189,28 +471,24 @@ class ProductViewTests(APITestCase):
 
     def test_seller_can_delete_own_product(self) -> None:
         self.authenticate(self.seller)
+
         response = self.client.delete(
             reverse("product-detail", kwargs={"product_id": self.product.id})
         )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Product.objects.filter(id=self.product.id).exists())
 
     def test_seller_cannot_delete_another_sellers_product(self) -> None:
         self.authenticate(self.other_seller)
+
         response = self.client.delete(
             reverse("product-detail", kwargs={"product_id": self.product.id})
         )
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_seller_can_retrieve_product_detail(self) -> None:
-        self.authenticate(self.seller)
-        response = self.client.get(
-            reverse("product-detail", kwargs={"product_id": self.product.id})
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["data"]["id"], str(self.product.id))
-
-    def test_get_permissions_adds_owner_check_for_mutating_methods(self) -> None:
+    def test_get_permissions_adds_seller_and_owner_checks_for_mutating_methods(self) -> None:
         factory = APIRequestFactory()
         request = factory.put(
             reverse("product-detail", kwargs={"product_id": self.product.id})
@@ -220,4 +498,5 @@ class ProductViewTests(APITestCase):
 
         permissions = view.get_permissions()
 
+        self.assertTrue(any(isinstance(permission, IsSeller) for permission in permissions))
         self.assertTrue(any(isinstance(permission, IsProductOwner) for permission in permissions))

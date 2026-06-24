@@ -1,12 +1,14 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AuthBootstrap from "./components/AuthBootstrap";
+import CartBootstrap from "./components/CartBootstrap";
 import Layout from "./components/layout/Layout";
 import BrowseProductsPage from "./pages/BrowseProductsPage";
 import CartPage from "./pages/CartPage";
-import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import OrdersPage from "./pages/OrdersPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import RegisterPage from "./pages/RegisterPage";
+import RoleLandingPage from "./pages/RoleLandingPage";
 import CreateProductPage from "./pages/seller/CreateProductPage";
 import EditProductPage from "./pages/seller/EditProductPage";
 import SellerDashboardPage from "./pages/seller/SellerDashboardPage";
@@ -17,19 +19,25 @@ export default function App() {
   return (
     <>
       <AuthBootstrap />
+      <CartBootstrap />
       <Routes>
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
         <Route path="/register" element={<Layout><RegisterPage /></Layout>} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Layout><HomePage /></Layout>} />
-          <Route path="/products" element={<Layout><BrowseProductsPage /></Layout>} />
-          <Route path="/cart" element={<Layout><CartPage /></Layout>} />
-          <Route path="/orders" element={<Layout><OrdersPage /></Layout>} />
+          <Route path="/" element={<RoleLandingPage />} />
+          <Route path="/history" element={<Layout><OrdersPage /></Layout>} />
+          <Route element={<RoleGuard allowedRole="BUYER" />}>
+            <Route path="/products" element={<Layout><BrowseProductsPage /></Layout>} />
+            <Route path="/products/:productId" element={<Layout><ProductDetailPage /></Layout>} />
+            <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+            <Route path="/orders" element={<Navigate to="/history" replace />} />
+          </Route>
           <Route element={<RoleGuard allowedRole="SELLER" />}>
             <Route path="/seller/dashboard" element={<Layout><SellerDashboardPage /></Layout>} />
             <Route path="/seller/products/create" element={<Layout><CreateProductPage /></Layout>} />
             <Route path="/seller/products/:productId/edit" element={<Layout><EditProductPage /></Layout>} />
             <Route path="/seller" element={<Navigate to="/seller/dashboard" replace />} />
+            <Route path="/seller/history" element={<Navigate to="/history" replace />} />
             <Route path="/seller/products/new" element={<Navigate to="/seller/products/create" replace />} />
           </Route>
         </Route>

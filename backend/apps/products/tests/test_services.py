@@ -86,3 +86,18 @@ class ProductServiceTests(TestCase):
         self.assertTrue(updated_product.image.name.startswith("products/"))
         self.assertFalse(old_image_path.exists())
         self.assertTrue(Path(updated_product.image.path).exists())
+
+    def test_delete_product_deletes_image_file(self) -> None:
+        image = SimpleUploadedFile(
+            "product.jpg",
+            b"fake image bytes",
+            content_type="image/jpeg",
+        )
+        self.product.image = image
+        self.product.save()
+        image_path = Path(self.product.image.path)
+
+        self.service.delete_product(self.product)
+
+        self.assertFalse(Product.objects.filter(id=self.product.id).exists())
+        self.assertFalse(image_path.exists())

@@ -6,8 +6,55 @@ import os
 from urllib.parse import urlparse
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def _load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE pairs from a local .env file when present."""
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].strip()
+        if "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def _load_database_url() -> None:
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        return
+
+    parsed = urlparse(database_url)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        return
+
+    if parsed.path and len(parsed.path) > 1:
+        os.environ.setdefault("DB_NAME", parsed.path.lstrip("/"))
+    if parsed.username:
+        os.environ.setdefault("DB_USER", parsed.username)
+    if parsed.password:
+        os.environ.setdefault("DB_PASSWORD", parsed.password)
+    if parsed.hostname:
+        os.environ.setdefault("DB_HOST", parsed.hostname)
+    if parsed.port:
+        os.environ.setdefault("DB_PORT", str(parsed.port))
+
+
+_load_env_file(BASE_DIR / ".env")
+_load_database_url()
 
 
 def _load_env_file(path: Path) -> None:
@@ -77,6 +124,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "storages",
     "rest_framework_simplejwt.token_blacklist",
     "apps.accounts",
     "apps.products",
@@ -123,6 +171,9 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
+        "OPTIONS": {
+            "sslmode": os.getenv("DB_SSLMODE", "prefer"),
+        },
     }
 }
 
@@ -143,6 +194,37 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+SUPABASE_PROJECT_REF = os.getenv("SUPABASE_PROJECT_REF")
+SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET")
+SUPABASE_S3_ENDPOINT_URL = os.getenv("SUPABASE_S3_ENDPOINT_URL")
+
+if SUPABASE_STORAGE_BUCKET and SUPABASE_S3_ENDPOINT_URL:
+    AWS_ACCESS_KEY_ID = os.getenv("SUPABASE_S3_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("SUPABASE_S3_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = SUPABASE_STORAGE_BUCKET
+    AWS_S3_ENDPOINT_URL = SUPABASE_S3_ENDPOINT_URL
+    AWS_S3_REGION_NAME = os.getenv("SUPABASE_S3_REGION", "us-east-1")
+    AWS_S3_ADDRESSING_STYLE = "path"
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = "public-read"
+    AWS_QUERYSTRING_AUTH = False
+
+    if SUPABASE_PROJECT_REF:
+        AWS_S3_CUSTOM_DOMAIN = (
+            f"{SUPABASE_PROJECT_REF}.supabase.co/storage/v1/object/public/"
+            f"{SUPABASE_STORAGE_BUCKET}"
+        )
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"

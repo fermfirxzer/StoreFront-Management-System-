@@ -1,0 +1,111 @@
+import { Link, useNavigate } from "react-router-dom";
+import productPlaceholder from "../assets/product-placeholder.svg";
+import type { Product } from "../types/product";
+import AppleButton from "./apple/AppleButton";
+import AppleCard from "./apple/AppleCard";
+
+interface ProductCatalogCardProps {
+  product: Product;
+  detailHref: string;
+}
+
+const thaiCurrencyFormatter = new Intl.NumberFormat("th-TH", {
+  style: "currency",
+  currency: "THB",
+  maximumFractionDigits: 2,
+});
+
+export default function ProductCatalogCard({
+  product,
+  detailHref,
+}: ProductCatalogCardProps) {
+  const navigate = useNavigate();
+
+  const openDetailPage = () => {
+    navigate(detailHref);
+  };
+
+  return (
+    <AppleCard
+      as="article"
+      className="cursor-pointer overflow-hidden border border-[#E0E7FF] p-0 shadow-[0_2px_12px_rgba(99,102,241,0.08)] hover:border-brand-200"
+      interactive
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("a, button")) {
+          return;
+        }
+
+        openDetailPage();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") {
+          return;
+        }
+
+        if ((event.target as HTMLElement).closest("a, button")) {
+          return;
+        }
+
+        event.preventDefault();
+        openDetailPage();
+      }}
+      role="link"
+      tabIndex={0}
+    >
+      <div className="h-1 w-full bg-gradient-to-r from-brand-500 to-violet-500" />
+
+      <Link className="block" to={detailHref}>
+        <div className="flex h-48 w-full items-center justify-center overflow-hidden bg-[#F8FAFF] px-4 py-4 sm:h-44">
+          <img
+            alt={product.image ? product.title : `${product.title} placeholder`}
+            className="max-h-full max-w-full object-contain object-center"
+            src={product.image ?? productPlaceholder}
+          />
+        </div>
+      </Link>
+
+      <div className="space-y-4 px-4 pb-4 pt-4">
+        <div className="space-y-1">
+          <Link className="block" to={detailHref}>
+            <h2 className="line-clamp-1 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-brand-900">
+              {product.title}
+            </h2>
+          </Link>
+          <p className="line-clamp-2 text-[13px] leading-6 text-apple-gray">
+            {product.description || "No description added yet."}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[17px] font-bold text-[#4338CA]">
+            {thaiCurrencyFormatter.format(product.unitPrice)}
+          </span>
+          <span
+            className={
+              product.quantity > 0
+                ? "inline-flex items-center gap-1.5 rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-1 text-[11px] font-bold text-[#4338CA]"
+                : "inline-flex items-center gap-1.5 rounded-full border border-[#FECACA] bg-[#FEE2E2] px-2.5 py-1 text-[11px] font-bold text-[#991B1B]"
+            }
+          >
+            <span
+              className={[
+                "inline-block h-1.5 w-1.5 rounded-full",
+                product.quantity > 0 ? "bg-[#6366F1]" : "bg-[#FF3B30]",
+              ].join(" ")}
+            />
+            {product.quantity > 0 ? `${product.quantity} in stock` : "Out of stock"}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 text-[12px] text-apple-gray">
+          <span className="min-w-0 truncate">{product.seller.email}</span>
+          <span className="shrink-0">{new Date(product.createdAt).toLocaleDateString("en-GB")}</span>
+        </div>
+
+        <AppleButton className="w-full" to={detailHref} variant="secondary">
+          View details
+        </AppleButton>
+      </div>
+    </AppleCard>
+  );
+}

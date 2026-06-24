@@ -74,7 +74,7 @@ describe("EditProductPage", () => {
 
     expect(await screen.findByDisplayValue("Desk lamp")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Product title"), {
+    fireEvent.change(screen.getByRole("textbox", { name: /Product title/ }), {
       target: { value: "Desk lamp pro" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save Product" }));

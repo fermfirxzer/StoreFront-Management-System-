@@ -56,16 +56,16 @@ describe("CreateProductPage", () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByLabelText("Product title"), {
+    fireEvent.change(screen.getByRole("textbox", { name: /Product title/ }), {
       target: { value: "Desk lamp" },
     });
-    fireEvent.change(screen.getByLabelText("Description"), {
+    fireEvent.change(screen.getByRole("textbox", { name: /Description/ }), {
       target: { value: "Warm light" },
     });
-    fireEvent.change(screen.getByPlaceholderText("149.99"), {
+    fireEvent.change(screen.getByRole("spinbutton", { name: /Price/ }), {
       target: { value: "24.99" },
     });
-    fireEvent.change(screen.getByPlaceholderText("12"), {
+    fireEvent.change(screen.getByRole("spinbutton", { name: /Quantity/ }), {
       target: { value: "5" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save Product" }));

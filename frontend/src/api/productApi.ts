@@ -1,8 +1,10 @@
 import { apiClient } from "./client";
-import type { ApiSuccessResponse } from "../types/api";
+import type { ApiSuccessResponse, PaginatedResponse } from "../types/api";
 import type {
   CreateProductPayload,
   Product,
+  ProductFilters,
+  SellerProductFilters,
   UpdateProductPayload,
 } from "../types/product";
 
@@ -57,21 +59,86 @@ function buildProductFormData(payload: CreateProductPayload | UpdateProductPaylo
   return formData;
 }
 
-export async function getSellerProducts(): Promise<Product[]> {
-  const response = await apiClient.get<ApiSuccessResponse<ProductResponseDto[]>>("/products/");
-  return response.data.data.map(mapProduct);
+function buildProductQueryParams(filters: ProductFilters): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set("page", filters.page.toString());
+
+  if (filters.pageSize !== undefined) {
+    params.set("page_size", filters.pageSize.toString());
+  }
+  if (filters.search) {
+    params.set("search", filters.search);
+  }
+  if (filters.minPrice) {
+    params.set("min_price", filters.minPrice);
+  }
+  if (filters.maxPrice) {
+    params.set("max_price", filters.maxPrice);
+  }
+  if (filters.sortBy) {
+    params.set("sort", filters.sortBy);
+  }
+
+  return params;
 }
 
-export async function getSellerProductById(productId: string): Promise<Product> {
+export async function getMarketplaceProducts(
+  filters: ProductFilters
+): Promise<PaginatedResponse<Product>> {
+  const response = await apiClient.get<ApiSuccessResponse<PaginatedResponse<ProductResponseDto>>>(
+    `/products/?${buildProductQueryParams(filters).toString()}`
+  );
+
+  return {
+    ...response.data.data,
+    results: response.data.data.results.map(mapProduct),
+  };
+}
+
+function buildSellerProductQueryParams(filters: SellerProductFilters): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set("page", filters.page.toString());
+
+  if (filters.pageSize !== undefined) {
+    params.set("page_size", filters.pageSize.toString());
+  }
+  if (filters.search) {
+    params.set("search", filters.search);
+  }
+  if (filters.sortBy) {
+    params.set("sort", filters.sortBy);
+  }
+
+  return params;
+}
+
+export async function getPaginatedSellerProducts(
+  filters: SellerProductFilters
+): Promise<PaginatedResponse<Product>> {
+  const response = await apiClient.get<ApiSuccessResponse<PaginatedResponse<ProductResponseDto>>>(
+    `/products/seller/?${buildSellerProductQueryParams(filters).toString()}`
+  );
+
+  return {
+    ...response.data.data,
+    results: response.data.data.results.map(mapProduct),
+  };
+}
+
+export async function getProductById(productId: string): Promise<Product> {
   const response = await apiClient.get<ApiSuccessResponse<ProductResponseDto>>(
     `/products/${productId}/`
   );
   return mapProduct(response.data.data);
 }
 
+export async function getSellerProductById(productId: string): Promise<Product> {
+  return getProductById(productId);
+}
+
 export async function createProduct(payload: CreateProductPayload): Promise<Product> {
   const response = await apiClient.post<ApiSuccessResponse<ProductResponseDto>>(
-    "/products/",
+    "/products/seller/",
     buildProductFormData(payload)
   );
   return mapProduct(response.data.data);

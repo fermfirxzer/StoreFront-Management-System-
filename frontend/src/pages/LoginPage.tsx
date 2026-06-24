@@ -48,7 +48,7 @@ export default function LoginPage() {
       <div className="grid w-full gap-12 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="flex flex-col justify-center">
           <p className="text-sm font-bold uppercase tracking-[0.28em] text-brand-600">
-            Marketplace
+            StoreFront-Management-System
           </p>
           <h1 className="mt-4 max-w-xl text-5xl font-bold tracking-tight text-brand-900 sm:text-6xl">
             Sign in to manage your store or start shopping.
@@ -115,4 +115,3 @@ export default function LoginPage() {
     </section>
   );
 }
-
